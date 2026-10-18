@@ -1,0 +1,2682 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>DRONA — Digital Resource Optimization & Networked Allocation</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            drona: {
+              950: '#030712',
+              900: '#081024',
+              850: '#0f1b38',
+              cyan: '#06b6d4',
+              blue: '#3b82f6',
+              emerald: '#10b981'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #030712;
+      color: #f8fafc;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* New DRONA 3D Networked Allocation Graphic Animations */
+    @keyframes ringRotateCW {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes ringRotateCCW {
+      0% { transform: rotate(360deg); }
+      100% { transform: rotate(0deg); }
+    }
+    @keyframes cubeFloat {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-7px) scale(1.03); }
+    }
+    @keyframes nodePulse {
+      0%, 100% { opacity: 0.45; transform: scale(0.92); }
+      50% { opacity: 1; transform: scale(1.08); }
+    }
+    @keyframes packetStream {
+      to { stroke-dashoffset: -56; }
+    }
+    .net-orbit-cw {
+      animation: ringRotateCW 36s linear infinite;
+      transform-origin: 200px 200px;
+    }
+    .net-orbit-ccw {
+      animation: ringRotateCCW 26s linear infinite;
+      transform-origin: 200px 200px;
+    }
+    .net-cube-float {
+      animation: cubeFloat 4s ease-in-out infinite;
+      transform-origin: 200px 200px;
+    }
+    .net-node-pulse {
+      animation: nodePulse 3s ease-in-out infinite;
+      transform-origin: 200px 200px;
+    }
+    .net-packet-line {
+      stroke-dasharray: 7 7;
+      animation: packetStream 2s linear infinite;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #060d1f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e3a8a;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #06b6d4;
+    }
+    .glass-panel {
+      background: linear-gradient(155deg, rgba(12, 23, 48, 0.88), rgba(6, 12, 28, 0.94));
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(56, 189, 248, 0.22);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#030712] text-slate-100 selection:bg-cyan-400 selection:text-slate-950">
+
+  <!-- GLOBAL TOAST CONTAINER -->
+  <div id="toast-container" class="fixed top-4 right-4 sm:bottom-5 sm:top-auto sm:right-5 z-50 flex flex-col gap-2 max-w-[92vw] sm:max-w-md pointer-events-none"></div>
+
+  <!-- GLOBAL MODAL FOR DETAILS / PTW / WORKER EDIT -->
+  <div id="global-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4">
+    <div class="glass-panel rounded-2xl max-w-2xl w-full p-4 sm:p-6 shadow-2xl border border-cyan-500/40 relative max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+        <h3 id="modal-title" class="text-base sm:text-lg font-bold text-white flex items-center gap-2">System Detail</h3>
+        <button type="button" onclick="closeModal()" class="text-slate-300 hover:text-white px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm font-medium">Close ✕</button>
+      </div>
+      <div id="modal-body" class="space-y-4 text-xs sm:text-sm text-slate-300"></div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 1: ULTRA-CLEAN DRONA HOME PAGE (ONLY 1 BUTTON: "Launch")         -->
+  <!-- ===================================================================== -->
+  <section id="view-home" class="min-h-[100dvh] flex flex-col items-center justify-center relative overflow-hidden px-4 py-6">
+    <!-- Subtle Aurora Ambient Glows -->
+    <div class="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-96 sm:w-[36rem] h-96 sm:h-[36rem] rounded-full bg-cyan-500/10 blur-3xl"></div>
+    <div class="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-80 sm:w-[28rem] h-80 sm:h-[28rem] rounded-full bg-blue-600/15 blur-3xl"></div>
+
+    <!-- Centered Mobile-First & Desktop-Balanced Splash Container -->
+    <main class="w-full max-w-lg mx-auto flex flex-col items-center text-center z-10 space-y-5 sm:space-y-6">
+      
+      <!-- NEW GRAPHIC: 3D ISOMETRIC NETWORKED RESOURCE ALLOCATION CONSTELLATION -->
+      <div class="relative w-60 h-60 sm:w-72 sm:h-72 flex items-center justify-center">
+        <svg viewBox="0 0 400 400" class="w-full h-full">
+          <defs>
+            <radialGradient id="dronaAuraGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.38" />
+              <stop offset="55%" stop-color="#3b82f6" stop-opacity="0.16" />
+              <stop offset="100%" stop-color="#030712" stop-opacity="0" />
+            </radialGradient>
+            <linearGradient id="dronaGoldCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#22d3ee" />
+              <stop offset="50%" stop-color="#3b82f6" />
+              <stop offset="100%" stop-color="#10b981" />
+            </linearGradient>
+            <linearGradient id="dronaBowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#38bdf8" />
+              <stop offset="50%" stop-color="#818cf8" />
+              <stop offset="100%" stop-color="#34d399" />
+            </linearGradient>
+            <linearGradient id="cubeTopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.85" />
+              <stop offset="100%" stop-color="#0284c7" stop-opacity="0.85" />
+            </linearGradient>
+            <linearGradient id="cubeLeftGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#1d4ed8" stop-opacity="0.9" />
+              <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95" />
+            </linearGradient>
+            <linearGradient id="cubeRightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#0d9488" stop-opacity="0.9" />
+              <stop offset="100%" stop-color="#090d16" stop-opacity="0.95" />
+            </linearGradient>
+          </defs>
+
+          <!-- Ambient Neural Field -->
+          <circle cx="200" cy="200" r="175" fill="url(#dronaAuraGrad)" class="net-node-pulse" />
+
+          <!-- Outer Networked Allocation Constellation Ring -->
+          <g class="net-orbit-cw">
+            <circle cx="200" cy="200" r="158" fill="none" stroke="url(#dronaGoldCyan)" stroke-width="1.5" stroke-dasharray="4 10" opacity="0.65" />
+            <!-- 6 Networked Allocation Satellite Nodes -->
+            <circle cx="200" cy="42" r="7" fill="#22d3ee" />
+            <circle cx="337" cy="121" r="6" fill="#38bdf8" />
+            <circle cx="337" cy="279" r="7" fill="#10b981" />
+            <circle cx="200" cy="358" r="6" fill="#60a5fa" />
+            <circle cx="63" cy="279" r="7" fill="#22d3ee" />
+            <circle cx="63" cy="121" r="6" fill="#10b981" />
+            <!-- Constellation Web Lines -->
+            <polygon points="200,42 337,121 337,279 200,358 63,279 63,121" fill="none" stroke="#38bdf8" stroke-width="1" opacity="0.3" />
+          </g>
+
+          <!-- Inner Counter-Rotating Optimization Ring -->
+          <g class="net-orbit-ccw">
+            <circle cx="200" cy="200" r="122" fill="none" stroke="url(#dronaBowGrad)" stroke-width="2" stroke-dasharray="32 18" opacity="0.75" />
+            <polygon points="200,78 305,260 95,260" fill="none" stroke="#22d3ee" stroke-width="1.2" opacity="0.35" />
+            <polygon points="200,322 305,140 95,140" fill="none" stroke="#10b981" stroke-width="1.2" opacity="0.35" />
+          </g>
+
+          <!-- Dynamic Allocation Data Beams -->
+          <line x1="200" y1="52" x2="200" y2="128" stroke="#22d3ee" stroke-width="2" class="net-packet-line" />
+          <line x1="328" y1="126" x2="255" y2="168" stroke="#38bdf8" stroke-width="2" class="net-packet-line" />
+          <line x1="328" y1="274" x2="255" y2="232" stroke="#10b981" stroke-width="2" class="net-packet-line" />
+          <line x1="200" y1="348" x2="200" y2="272" stroke="#60a5fa" stroke-width="2" class="net-packet-line" />
+          <line x1="72" y1="274" x2="145" y2="232" stroke="#22d3ee" stroke-width="2" class="net-packet-line" />
+          <line x1="72" y1="126" x2="145" y2="168" stroke="#10b981" stroke-width="2" class="net-packet-line" />
+
+          <!-- Centerpiece 3D Isometric Digital Resource Cube & Network Core -->
+          <g class="net-cube-float">
+            <!-- Outer Translucent Hexagonal Halo -->
+            <polygon points="200,114 274,157 274,243 200,286 126,243 126,157"
+                     fill="#060d1f" stroke="url(#dronaGoldCyan)" stroke-width="2.5" />
+            <!-- 3D Isometric Cube Faces -->
+            <!-- Top Face -->
+            <polygon points="200,132 258,166 200,200 142,166" fill="url(#cubeTopGrad)" stroke="#bae6fd" stroke-width="1.2" />
+            <!-- Left Face -->
+            <polygon points="142,166 200,200 200,268 142,234" fill="url(#cubeLeftGrad)" stroke="#60a5fa" stroke-width="1.2" />
+            <!-- Right Face -->
+            <polygon points="200,200 258,166 258,234 200,268" fill="url(#cubeRightGrad)" stroke="#34d399" stroke-width="1.2" />
+
+            <!-- Glowing Networked Nodes on Cube Vertices -->
+            <circle cx="200" cy="132" r="4.5" fill="#ffffff" />
+            <circle cx="258" cy="166" r="4.5" fill="#22d3ee" />
+            <circle cx="142" cy="166" r="4.5" fill="#38bdf8" />
+            <circle cx="200" cy="200" r="6" fill="#ffffff" />
+            <circle cx="200" cy="268" r="4.5" fill="#10b981" />
+          </g>
+        </svg>
+      </div>
+
+      <!-- Brand Title & Full Acronym Expansion -->
+      <div class="space-y-2.5">
+        <div class="text-4xl sm:text-6xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-emerald-300">
+          DRONA
+        </div>
+        <h1 class="text-sm sm:text-lg font-bold tracking-wide text-cyan-300 uppercase">
+          Digital Resource Optimization &amp; Networked Allocation
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+          AI-enabled Business Partner workforce planning, skill compliance, smart rostering, and JSA-driven crew allocation across mines and smelters.
+        </p>
+      </div>
+
+      <!-- Hidden Telemetry State Holders (Preserves DOM IDs Cleanly Without Visual Clutter) -->
+      <div class="hidden" aria-hidden="true">
+        <span id="logo-live-ticker">Rampura Agucha Gate #2 • OK</span>
+        <span id="logo-stat-onsite">6,418</span>
+        <span id="logo-stat-relievers">142</span>
+        <span id="hero-live-workers">19,842</span>
+      </div>
+
+      <!-- STRICTLY ONE BUTTON ON THE HOME PAGE: "Launch" -->
+      <div class="w-full pt-2 flex justify-center">
+        <button type="button" onclick="navigateView('login')" class="w-full max-w-xs py-4 px-10 rounded-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-base sm:text-lg tracking-wider uppercase shadow-2xl shadow-cyan-500/25 transition transform hover:-translate-y-0.5 active:scale-95">
+          Launch
+        </button>
+      </div>
+
+    </main>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 2: RBAC LOGIN PORTAL (ROLES ONLY — ZERO PERSONAL NAMES)          -->
+  <!-- ===================================================================== -->
+  <section id="view-login" class="min-h-[100dvh] hidden flex-col justify-between bg-[#030712] p-3 sm:p-8 relative">
+    <div class="max-w-6xl mx-auto w-full my-auto space-y-5 py-2">
+      <!-- Top Back Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <button type="button" onclick="navigateView('home')" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-semibold flex items-center gap-2 transition">
+          ← Back to DRONA Home
+        </button>
+        <div class="flex items-center gap-2 text-[11px] font-mono text-cyan-400">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+          <span>DRONA • ROLE-BASED ACCESS CONTROL</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
+        <!-- Left 5 Cols: Role Selection (Pure Roles Only, Zero Personal Names) -->
+        <div class="lg:col-span-5 glass-panel rounded-2xl p-4 sm:p-6 border border-cyan-500/30 space-y-4">
+          <div>
+            <span class="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">DRONA RBAC Gateway</span>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-white mt-2">Select System Role</h2>
+            <p class="text-xs text-slate-400 mt-1">Digital Resource Optimization &amp; Networked Allocation — choose a role below to launch.</p>
+          </div>
+
+          <!-- Pure Role Selector Cards (Only Roles, No Names) -->
+          <div class="space-y-2" id="rbac-role-cards"></div>
+
+          <!-- Role Session Form -->
+          <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-3 pt-2 border-t border-slate-800">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Role Access Code</label>
+                <input id="login-email" type="text" readonly value="ROLE-SUPER-USER" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-cyan-300 text-xs font-mono focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Security Clearance</label>
+                <input id="login-phone" type="text" readonly value="LEVEL-5-GLOBAL" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-emerald-300 text-xs font-mono focus:outline-none" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">Networked Location Scope</label>
+              <input id="login-scope" type="text" readonly value="All HZL Mines, Concentrators & Smelters" class="w-full px-3 py-2 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-300 text-xs font-mono" />
+            </div>
+            <button type="submit" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 via-blue-500 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-black text-sm shadow-lg shadow-cyan-500/20 transition">
+              Authenticate &amp; Open DRONA →
+            </button>
+          </form>
+        </div>
+
+        <!-- Right 7 Cols: Live RBAC Permission Matrix Preview -->
+        <div class="lg:col-span-7 glass-panel rounded-2xl p-4 sm:p-6 border border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-white" id="rbac-preview-title">Selected Role: Super User</h3>
+              <p class="text-xs text-slate-400" id="rbac-preview-desc">Unrestricted read/write/override permissions across Overview and all 13 functional modules.</p>
+            </div>
+            <span id="rbac-preview-badge" class="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-bold">
+              SUPER USER
+            </span>
+          </div>
+
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-left border-collapse text-xs min-w-[420px]">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2 px-2">Module / Section</th>
+                  <th class="py-2 px-2">View / Read</th>
+                  <th class="py-2 px-2">Execute / Edit</th>
+                  <th class="py-2 px-2">AI Override &amp; Sync</th>
+                </tr>
+              </thead>
+              <tbody id="rbac-matrix-tbody" class="divide-y divide-slate-800/60"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- VIEW 3: MAIN DRONA APPLICATION (PHONE & DESKTOP COMPATIBLE)           -->
+  <!-- ===================================================================== -->
+  <section id="view-app" class="min-h-screen hidden flex-col bg-[#030712] pb-16 lg:pb-0">
+    <!-- Top Application Bar -->
+    <header class="sticky top-0 z-30 bg-[#030712]/95 backdrop-blur-md border-b border-slate-800 px-3 sm:px-4 py-2.5">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <!-- Brand & Mobile Sidebar Drawer Button -->
+        <div class="flex items-center gap-2.5">
+          <button type="button" onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 hover:text-white font-bold text-sm" aria-label="Toggle Menu">
+            ☰
+          </button>
+          <div class="flex items-center gap-2 cursor-pointer" onclick="navigateView('home')" title="Return to DRONA Home">
+            <div class="w-8 h-8 rounded-lg bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center shrink-0">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+            </div>
+            <div>
+              <div class="text-sm font-black tracking-wider text-white leading-none">DRONA</div>
+              <div class="text-[10px] text-cyan-300/90 mt-0.5 hidden md:block">Digital Resource Optimization &amp; Networked Allocation</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Global Site, Shift & Pure Role Controls (Responsive on Phone) -->
+        <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl px-2 py-1.5">
+            <span class="text-[10px] text-slate-400 hidden sm:inline">Site:</span>
+            <select id="global-site-filter" onchange="handleGlobalFilterChange()" class="bg-transparent text-[11px] sm:text-xs font-semibold text-white focus:outline-none max-w-[115px] sm:max-w-none">
+              <option value="ALL">All 5 HZL Sites</option>
+              <option value="RAMPURA">Rampura Agucha UG</option>
+              <option value="SINDESAR">Sindesar Khurd UG</option>
+              <option value="CHANDERIYA">Chanderiya Smelter</option>
+              <option value="DARIBA">Dariba Complex</option>
+              <option value="ZAWAR">Zawar UG Mines</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl px-2 py-1.5">
+            <select id="global-shift-filter" onchange="handleGlobalFilterChange()" class="bg-transparent text-[11px] sm:text-xs font-semibold text-cyan-300 focus:outline-none">
+              <option value="Shift A">Shift A</option>
+              <option value="Shift B">Shift B</option>
+              <option value="Shift C">Shift C</option>
+            </select>
+          </div>
+
+          <!-- Pure RBAC Role Switcher (Strictly Roles Only — Zero Personal Names) -->
+          <div class="flex items-center gap-1 bg-cyan-500/10 border border-cyan-500/30 rounded-xl px-2 py-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+            <select id="header-role-switcher" onchange="switchRoleFromHeader(this.value)" class="bg-transparent text-[11px] sm:text-xs font-mono font-bold text-cyan-300 focus:outline-none max-w-[130px] sm:max-w-none">
+              <option value="SUPER_USER">Super User</option>
+              <option value="PLANT_HEAD">Plant / Mine Head</option>
+              <option value="SUPERVISOR">Shift Supervisor</option>
+              <option value="SAFETY_OFFICER">HSE Safety Officer</option>
+              <option value="BP_VENDOR">Business Partner Admin</option>
+            </select>
+          </div>
+
+          <button type="button" onclick="navigateView('login')" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300">
+            RBAC
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Horizontal Scrollable Quick-Tab Strip (Visible on Phones/Tablets) -->
+      <div id="mobile-top-pills" class="lg:hidden flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 mt-2 border-t border-slate-800/80"></div>
+    </header>
+
+    <!-- App Body: Left Sidebar + Right Main Content -->
+    <div class="flex flex-1 min-h-[calc(100vh-57px)] relative">
+      <!-- Navigation Sidebar (Slide-over on Phone, Sticky on Desktop) -->
+      <aside id="app-sidebar" class="w-72 bg-[#060c1c]/95 border-r border-slate-800 shrink-0 hidden lg:flex flex-col justify-between p-3 overflow-y-auto max-h-[calc(100vh-57px)] sticky top-[57px]">
+        <div class="space-y-1" id="sidebar-nav-list"></div>
+
+        <!-- Bottom System Connectors Status in Sidebar -->
+        <div class="mt-4 pt-3 border-t border-slate-800 space-y-2 text-[11px]">
+          <div class="text-slate-400 font-semibold uppercase tracking-wider">DRONA Network Sync</div>
+          <div class="flex items-center justify-between text-slate-300">
+            <span>Saviour WMS API</span>
+            <span class="font-mono text-emerald-400">● Bi-Dir OK</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-300">
+            <span>Aparajitha Payroll</span>
+            <span class="font-mono text-cyan-300">● Read-Only</span>
+          </div>
+          <div class="flex items-center justify-between text-slate-300">
+            <span>Gate Biometrics</span>
+            <span class="font-mono text-emerald-400">● 5 Sites Live</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Dynamic Content Container -->
+      <main class="flex-1 p-3 sm:p-6 overflow-y-auto max-w-full">
+        <!-- Active Section Header Banner -->
+        <div id="section-header-banner" class="glass-panel rounded-2xl p-4 sm:p-5 mb-4 sm:mb-6 border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="active-sec-tag" class="text-[10px] sm:text-[11px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">TAB 00 • EXECUTIVE OVERVIEW</span>
+              <span id="active-sec-rbac-pill" class="text-[10px] sm:text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">ROLE: SUPER USER</span>
+            </div>
+            <h1 id="active-sec-title" class="text-lg sm:text-2xl font-extrabold text-white mt-1">DRONA Executive Command Center</h1>
+            <p id="active-sec-subtitle" class="text-xs sm:text-sm text-slate-400 mt-0.5">Digital Resource Optimization &amp; Networked Allocation across ~20,000 Business Partner workers and 13 functional sections.</p>
+          </div>
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <button type="button" onclick="switchTab('sec13')" class="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold transition">
+              🤖 Open Sec 13: AI JSA &amp; 20 HZL Jobs
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT CONTAINERS -->
+        <div id="tab-content-area" class="space-y-5 sm:space-y-6"></div>
+      </main>
+    </div>
+
+    <!-- Mobile Sticky Bottom Navigation Bar (Phone Ergonomics) -->
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#050a18]/95 backdrop-blur-md border-t border-slate-800 px-2 py-1.5 grid grid-cols-5 gap-1 text-center">
+      <button type="button" onclick="switchTab('overview')" class="py-1.5 rounded-lg text-[10px] font-semibold text-slate-300 hover:text-cyan-300 flex flex-col items-center">
+        <span class="text-xs">📊</span><span>Overview</span>
+      </button>
+      <button type="button" onclick="switchTab('sec4')" class="py-1.5 rounded-lg text-[10px] font-semibold text-slate-300 hover:text-cyan-300 flex flex-col items-center">
+        <span class="text-xs">📅</span><span>AI Roster</span>
+      </button>
+      <button type="button" onclick="switchTab('sec6')" class="py-1.5 rounded-lg text-[10px] font-semibold text-slate-300 hover:text-cyan-300 flex flex-col items-center">
+        <span class="text-xs">⚡</span><span>Reliever</span>
+      </button>
+      <button type="button" onclick="switchTab('sec13')" class="py-1.5 rounded-lg text-[10px] font-bold text-cyan-300 flex flex-col items-center">
+        <span class="text-xs">🤖</span><span>AI JSA (20)</span>
+      </button>
+      <button type="button" onclick="toggleMobileSidebar()" class="py-1.5 rounded-lg text-[10px] font-semibold text-emerald-300 flex flex-col items-center">
+        <span class="text-xs">☰</span><span>All 13</span>
+      </button>
+    </nav>
+  </section>
+
+  <!-- ===================================================================== -->
+  <!-- APPLICATION STATE, DATA & INTERACTIVE CONTROLLERS                     -->
+  <!-- ===================================================================== -->
+  <script>
+    // -----------------------------------------------------------------------
+    // 1. PURE RBAC ROLES (STRICTLY ROLE TITLES ONLY — NO NAMES ANYWHERE)
+    // -----------------------------------------------------------------------
+    const RBAC_ROLES = {
+      SUPER_USER: {
+        id: 'SUPER_USER',
+        roleLabel: 'Super User',
+        subtitle: 'Full Unrestricted System & AI Governance Role',
+        code: 'ROLE-SUPER-USER',
+        token: 'LEVEL-5-GLOBAL',
+        scope: 'All HZL Mines, Concentrators & Smelters (Global)',
+        level: 'SUPER USER',
+        desc: 'Unrestricted administrative, AI model configuration, master data cleansing, roster approval, and JSA allocation rights across Overview and all 13 sections.',
+        permissions: { read: 'All 13 Sections', edit: 'Full Read/Write/Approve', override: 'Enabled (Global AI & Safety Lock Admin)' }
+      },
+      PLANT_HEAD: {
+        id: 'PLANT_HEAD',
+        roleLabel: 'Plant / Mine Head',
+        subtitle: 'Executive Multi-Location & SLA Oversight Role',
+        code: 'ROLE-PLANT-HEAD',
+        token: 'LEVEL-4-EXEC',
+        scope: 'Rampura Agucha & Chanderiya Complex',
+        level: 'PLANT / MINE HEAD',
+        desc: 'Executive oversight of multi-location dashboards, overtime budgets, contractor SLAs, and predictive workforce intelligence.',
+        permissions: { read: 'All 13 Sections', edit: 'Approve Budgets & SLAs', override: 'Emergency OT Approval Only' }
+      },
+      SUPERVISOR: {
+        id: 'SUPERVISOR',
+        roleLabel: 'Shift Supervisor',
+        subtitle: 'Operational Shift Rostering, Reliever & JSA Allocation Role',
+        code: 'ROLE-SHIFT-SUPERVISOR',
+        token: 'LEVEL-3-OPS',
+        scope: 'Rampura Agucha UG & Sindesar Khurd',
+        level: 'SHIFT SUPERVISOR',
+        desc: 'Operational control of shift rosters, one-click reliever deployment, shift handovers, and AI JSA daily task crew allocation.',
+        permissions: { read: 'Operational Sections (1–8, 10, 13)', edit: 'Roster, Reliever & JSA Allocation', override: 'Blocked on Hard Safety Locks' }
+      },
+      SAFETY_OFFICER: {
+        id: 'SAFETY_OFFICER',
+        roleLabel: 'HSE Safety Officer',
+        subtitle: 'DGMS Compliance, Skill Matrix & JSA Permit Governance Role',
+        code: 'ROLE-HSE-SAFETY',
+        token: 'LEVEL-4-HSE',
+        scope: 'All HZL Underground & Smelter Units',
+        level: 'HSE SAFETY OFFICER',
+        desc: 'Governs the skill matrix, mandatory DGMS/Safety certifications, 100% compliance deployment locks, and AI JSA hazard rules.',
+        permissions: { read: 'All Sections', edit: 'Skill Matrix, Cert Locks & JSA Rules', override: 'Can Halt Non-Compliant Deployments' }
+      },
+      BP_VENDOR: {
+        id: 'BP_VENDOR',
+        roleLabel: 'Business Partner Admin',
+        subtitle: 'Contractor Roster Submission & Certificate Renewal Role',
+        code: 'ROLE-BP-ADMIN',
+        token: 'LEVEL-2-PARTNER',
+        scope: 'Scoped Contractor Workforce Pool',
+        level: 'BUSINESS PARTNER ADMIN',
+        desc: 'Scoped contractor portal access to submit proposed shift rosters, renew expiring worker certificates, and track SLA metrics.',
+        permissions: { read: 'Sec 2, Sec 9 (Scoped to Vendor Pool)', edit: 'Submit Draft Rosters & Cert Renewals', override: 'None (Subject to AI Pre-Validation)' }
+      }
+    };
+
+    // -----------------------------------------------------------------------
+    // 2. NAVIGATION DEFINITIONS (OVERVIEW + 13 SECTIONS)
+    // -----------------------------------------------------------------------
+    const NAV_SECTIONS = [
+      { id: 'overview', code: '00', name: 'Executive Overview', fullTitle: 'DRONA Executive Overview & Target KPI Command Center', ai: false, subtitle: 'Digital Resource Optimization & Networked Allocation across ~20,000 Business Partner workers and all 13 modules.' },
+      { id: 'sec1', code: '01', name: 'AI Master Data Cleansing', fullTitle: 'Section 1: AI-Assisted Master Data Cleansing & Golden Record Hub', ai: true, subtitle: 'Deduplicate, standardize, and validate ~20,000 contract workforce records across Saviour, Aparajitha, and site sheets.' },
+      { id: 'sec2', code: '02', name: 'Skill Matrix & Cert Lock', fullTitle: 'Section 2: Skill Matrix Management & 100% Certification Governance', ai: false, subtitle: 'Track L1–L4 trade proficiency, DGMS licenses, medical fitness, and enforce 100% certified deployment locks.' },
+      { id: 'sec3', code: '03', name: 'AI Demand & Capacity', fullTitle: 'Section 3: AI Workforce Demand Forecasting & Capacity Planning', ai: true, subtitle: 'Predict shift absenteeism, calculate standby reliever buffers, and run What-If plant shutdown simulations.' },
+      { id: 'sec4', code: '04', name: 'AI Smart Rostering', fullTitle: 'Section 4: AI Smart Rostering & Pre-Upload Rule Validation Engine', ai: true, subtitle: 'Replace unilateral Saviour uploads with automated multi-constraint schedule generation and fatigue validation.' },
+      { id: 'sec5', code: '05', name: 'Live Gate Attendance', fullTitle: 'Section 5: Real-Time Biometric & Mine-Gate Turnstile Tracking', ai: false, subtitle: 'Consume live biometric punches across HZL sites to verify on-post presence and flag shift no-shows immediately.' },
+      { id: 'sec6', code: '06', name: 'AI Reliever Allocation', fullTitle: 'Section 6: AI Automated Reliever Identification & Dynamic Deployment', ai: true, subtitle: 'Rank and deploy qualified standby workers in seconds based on skill match, zero overtime impact, proximity, and rest.' },
+      { id: 'sec7', code: '07', name: 'AI Overtime Control', fullTitle: 'Section 7: AI Overtime Optimization & Cost-Leakage Control', ai: true, subtitle: 'Leverage read-only Aparajitha wage/OT tiers to intercept avoidable overtime and achieve 10–15% productivity gains.' },
+      { id: 'sec8', code: '08', name: 'Supervisor Workbench', fullTitle: 'Section 8: Supervisor Operational Workbench & Mobile Console', ai: false, subtitle: 'Interactive roster adjustments, one-click exception approvals, and digital shift-to-shift handover logs.' },
+      { id: 'sec9', code: '09', name: 'Business Partner Portal', fullTitle: 'Section 9: Business Partner (Contractor) Governance & SLA Portal', ai: false, subtitle: 'Monitor vendor manpower supply vs. contract commitments, skill compliance scorecards, and pre-validated roster uploads.' },
+      { id: 'sec10', code: '10', name: 'Multi-Site Command', fullTitle: 'Section 10: Real-Time Multi-Location Command Center & Heatmaps', ai: false, subtitle: 'Live plant-by-plant and mine-by-mine headcount visibility across Rampura Agucha, Sindesar Khurd, Chanderiya, Dariba, and Zawar.' },
+      { id: 'sec11', code: '11', name: 'AI Workforce Risk Radar', fullTitle: 'Section 11: AI Workforce Intelligence & Predictive Risk Analytics', ai: true, subtitle: 'Forecast 30–60 day trade skill shortages, behavioral absenteeism clusters, and AI cross-training recommendations.' },
+      { id: 'sec12', code: '12', name: 'Integration & RBAC Hub', fullTitle: 'Section 12: Non-Intrusive Enterprise Integration, Security & Middleware Hub', ai: false, subtitle: 'Bi-directional Saviour sync, read-only Aparajitha bridge, out-of-scope guardrails, and immutable RBAC audit logs.' },
+      { id: 'sec13', code: '13', name: 'AI JSA & 20 HZL Jobs', fullTitle: 'Section 13: AI Work-Order & JSA-Driven Manpower Allocation Engine', ai: true, subtitle: 'Analyze daily work orders and Job Safety Analysis (JSA) across 20 HZL mining, smelter, and maintenance activities to auto-allocate certified crews.' }
+    ];
+
+    // -----------------------------------------------------------------------
+    // 3. 20 HZL DAILY ACTIVITIES DATASET (UG MINES, SMELTERS, CONCENTRATOR, MAINT)
+    // -----------------------------------------------------------------------
+    const HZL_20_ACTIVITIES = [
+      {
+        id: 1,
+        domain: 'UG Mining',
+        site: 'Rampura Agucha UG Mine',
+        activity: 'Development Face Drilling (Jumbo Drill Operation)',
+        hazards: 'Rockfall from unsupported brow, high noise (>95 dB), hydraulic hose burst, trailing 1000V cable damage',
+        permits: ['DGMS UG Competency', 'HEMM Jumbo License', 'Face Scaling Checklist'],
+        ppe: 'Hard hat with cap lamp, self-rescuer, ear defenders, metatarsal safety boots',
+        roles: [
+          { title: 'Jumbo Drill Operator', tier: 'L4', count: 1, cert: 'DGMS HEMM UG Drill License' },
+          { title: 'Jumbo Helper / Cable Handler', tier: 'L2', count: 1, cert: 'UG Electrical Cable Safety' },
+          { title: 'Mine Mate / Shift Chargehand', tier: 'L3', count: 1, cert: 'DGMS Mine Mate Certificate' }
+        ],
+        totalCrew: 3
+      },
+      {
+        id: 2,
+        domain: 'UG Mining',
+        site: 'Sindesar Khurd UG Mine',
+        activity: 'Production Stope Charging, Stemming & Blasting',
+        hazards: 'Premature detonation, emulsion handling, toxic blasting fumes (CO/NOx), flyrock',
+        permits: ['DGMS Shotfirer/Blaster Permit', 'Explosives Magazine Issue Pass', 'Pre-Blast Gas Clearance'],
+        ppe: 'Anti-static clothing, gas detector (CO/NO2/O2), self-rescuer, eye protection',
+        roles: [
+          { title: 'Certified DGMS Shotfirer / Blaster', tier: 'L4', count: 1, cert: 'DGMS Blaster Certificate' },
+          { title: 'Explosives Charge Hand', tier: 'L3', count: 2, cert: 'Explosives Handling Clearance' },
+          { title: 'Blasting Barricade Sentry', tier: 'L1', count: 2, cert: 'UG Basic Induction' }
+        ],
+        totalCrew: 5
+      },
+      {
+        id: 3,
+        domain: 'UG Mining',
+        site: 'Zawar Underground Mines',
+        activity: 'Loose Scaling, Shotcreting & Rock Bolting (Ground Support)',
+        hazards: 'Fall of loose ground/rib, shotcrete rebound, chemical accelerator skin/eye burn',
+        permits: ['Ground Support PTW', 'Shotcrete Rig Operator Pass', 'Geotech Inspection Sign-Off'],
+        ppe: 'Full face shield, chemical-resistant gloves, dust respirator, safety boots',
+        roles: [
+          { title: 'Mechanized Bolter/Scaler Operator', tier: 'L4', count: 1, cert: 'UG Bolter Rig License' },
+          { title: 'Shotcrete Sprayer Nozzleman', tier: 'L3', count: 1, cert: 'Shotcrete Competency L3' },
+          { title: 'Batching / Pump Helper', tier: 'L2', count: 1, cert: 'Chemical Handling Pass' },
+          { title: 'Ground Spotter', tier: 'L2', count: 1, cert: 'UG Roof Inspection Training' }
+        ],
+        totalCrew: 4
+      },
+      {
+        id: 4,
+        domain: 'UG Mining',
+        site: 'Rampura Agucha UG Mine',
+        activity: 'LHD Mucking & LPDT Ore Hauling from Drawpoints',
+        hazards: 'Blind-spot equipment collision, stope brow collapse, diesel exhaust heat & particulates',
+        permits: ['UG Heavy Vehicle Permit', 'Drawpoint Remote Mucking Clearance'],
+        ppe: 'High-vis reflective vest, cap lamp, self-rescuer, P2 diesel particulate mask',
+        roles: [
+          { title: 'LHD (Load-Haul-Dump) Operator', tier: 'L4', count: 1, cert: 'Remote & Cabin LHD License' },
+          { title: 'LPDT Articulated Truck Driver', tier: 'L3', count: 2, cert: 'UG Heavy Dump Truck License' },
+          { title: 'Haulage Traffic Spotter', tier: 'L2', count: 1, cert: 'UG Traffic Marshal Pass' }
+        ],
+        totalCrew: 4
+      },
+      {
+        id: 5,
+        domain: 'UG Mining',
+        site: 'Sindesar Khurd UG Mine',
+        activity: 'Auxiliary Ventilation Fan & Flexible Duct Extension',
+        hazards: 'Work at height on scissor lift, fan blade entanglement, electrical shock, oxygen deficiency',
+        permits: ['Work at Height (WAH) Permit', 'Electrical LOTO Permit', 'Ventilation Airflow Check'],
+        ppe: 'Full-body safety harness with double lanyard, dielectric gloves, hard hat',
+        roles: [
+          { title: 'UG Scissor Lift Operator', tier: 'L3', count: 1, cert: 'MEWP / Scissor Lift License' },
+          { title: 'Ventilation Rigger / Fitter', tier: 'L3', count: 2, cert: 'Work at Height & Rigging L3' },
+          { title: 'Authorized UG Electrician', tier: 'L3', count: 1, cert: 'Wireman & LOTO Permit' },
+          { title: 'Duct Handling Helper', tier: 'L1', count: 1, cert: 'WAH Basic Pass' }
+        ],
+        totalCrew: 5
+      },
+      {
+        id: 6,
+        domain: 'Smelter (Hydro)',
+        site: 'Chanderiya Lead-Zinc Smelter',
+        activity: 'Cell House Cathode Stripping & Short-Circuit Rectification',
+        hazards: 'Sulphuric acid mist inhalation, high DC busbar short-circuit burns, overhead crane pinch points',
+        permits: ['Cell House Operations PTW', 'EOT Crane Lift Pass', 'Acid Mist PPE Verification'],
+        ppe: 'Acid-resistant suit, acid mist respirator cartridge, insulated boots, face visor',
+        roles: [
+          { title: 'Cathode Stripping Machine Operator', tier: 'L3', count: 1, cert: 'Cell House Automation L3' },
+          { title: 'Cell House EOT Crane Operator', tier: 'L3', count: 1, cert: 'Overhead Crane License' },
+          { title: 'Electrowinning Cell Attendant', tier: 'L2', count: 4, cert: 'Acid Area & Busbar Safety' },
+          { title: 'Shift Cell Chargehand', tier: 'L3', count: 1, cert: 'Hydro Smelter Supervisor Pass' }
+        ],
+        totalCrew: 7
+      },
+      {
+        id: 7,
+        domain: 'Smelter (Pyro)',
+        site: 'Chanderiya Lead-Zinc Smelter',
+        activity: 'Roaster / ESP Hot Gas Duct Dust Clearing & Inspection',
+        hazards: 'Toxic SO2 gas exposure, hot calcine dust burns (>250°C), oxygen-deficient confined space',
+        permits: ['Confined Space Entry Permit', 'Hot Work Permit', 'Multi-Gas Detector & SCBA Clearance'],
+        ppe: 'Self-Contained Breathing Apparatus (SCBA), aluminized heat suit, rescue tripod harness',
+        roles: [
+          { title: 'Confined Space Permit Supervisor', tier: 'L4', count: 1, cert: 'CSE Level-4 Supervisor' },
+          { title: 'Authorized Gas Tester', tier: 'L3', count: 1, cert: 'SO2/O2/CO Gas Testing Cert' },
+          { title: 'Confined Space Hole Watcher', tier: 'L2', count: 1, cert: 'CSE Standby & Rescue Pass' },
+          { title: 'ESP / Duct Cleaning Technician', tier: 'L3', count: 3, cert: 'SCBA & Hot Dust Entry Pass' }
+        ],
+        totalCrew: 6
+      },
+      {
+        id: 8,
+        domain: 'Smelter (Hydro)',
+        site: 'Dariba Smelter & Concentrator',
+        activity: 'Leaching Filter Press Cloth Washing & Cake Discharge',
+        hazards: 'Acidic zinc-leach slurry splash, 150-bar high-pressure water jet injury, slippery grating',
+        permits: ['Chemical Area Work Permit', 'Filter Press Hydraulic LOTO'],
+        ppe: 'Full PVC chemical apron, high-pressure jetting boots, face shield, nitrile gauntlets',
+        roles: [
+          { title: 'Filter Press Panel Operator', tier: 'L3', count: 1, cert: 'Leach Filtration Operator L3' },
+          { title: 'High-Pressure Water Jet Cleaner', tier: 'L2', count: 2, cert: 'HP Jetting Safety Pass' },
+          { title: 'Cake Chute & Slurry Attendant', tier: 'L1', count: 2, cert: 'Acid Area Basic Induction' }
+        ],
+        totalCrew: 5
+      },
+      {
+        id: 9,
+        domain: 'Smelter (Pyro)',
+        site: 'Dariba Smelter & Concentrator',
+        activity: 'Melting Furnace Zinc Ingot Casting, Skimming & Stacking',
+        hazards: 'Molten zinc splash (450°C), radiant heat stress, dross fumes, forklift pedestrian interaction',
+        permits: ['Hot Metal Area Permit', 'Forklift Operation Clearance'],
+        ppe: 'Flame-retardant molten metal jacket, heat visor, spats, heat-insulating Kevlar gloves',
+        roles: [
+          { title: 'Casting Carousel Operator', tier: 'L3', count: 1, cert: 'Furnace Casting Control L3' },
+          { title: 'Molten Metal Dross Skimmer', tier: 'L2', count: 2, cert: 'Hot Metal Handling Pass' },
+          { title: 'Ingot Bay Forklift Operator', tier: 'L3', count: 1, cert: 'Industrial Forklift License' },
+          { title: 'Ingot Strapping & Stacking Helper', tier: 'L1', count: 2, cert: 'Foundry Floor Safety Pass' }
+        ],
+        totalCrew: 6
+      },
+      {
+        id: 10,
+        domain: 'Smelter (Acid)',
+        site: 'Chanderiya Lead-Zinc Smelter',
+        activity: 'Sulphuric Acid (98% H2SO4) Road Tanker Loading Operations',
+        hazards: 'Catastrophic acid burn, toxic fume inhalation, fall from tanker top dome',
+        permits: ['Hazardous Chemical Loading Permit', 'Tanker Dome Fall-Arrest Clearance'],
+        ppe: 'Full Category-3 acid encapsulates suit, full-face respirator, overhead retractable lifeline',
+        roles: [
+          { title: 'Acid Dispatch Loading Operator', tier: 'L3', count: 1, cert: 'HAZMAT Acid Transfer Cert' },
+          { title: 'Tanker Top-Dome Safety Attendant', tier: 'L2', count: 1, cert: 'WAH & Acid Rescue Pass' },
+          { title: 'Wheel-Chock & Valve Assistant', tier: 'L2', count: 1, cert: 'Chemical Spill Response L2' }
+        ],
+        totalCrew: 3
+      },
+      {
+        id: 11,
+        domain: 'Concentrator',
+        site: 'Rampura Agucha UG Mine',
+        activity: 'Primary Crusher Grizzly Jam Clearing & Rock Breaker Operation',
+        hazards: 'Flyrock from boulder breaking, fall into primary crusher throat, hydraulic line rupture',
+        permits: ['Crusher Feeder LOTO Permit', 'Work at Height Lifeline Permit'],
+        ppe: 'Full-body harness anchored to static line, impact goggles, hearing protection',
+        roles: [
+          { title: 'Hydraulic Rock Breaker Operator', tier: 'L3', count: 1, cert: 'Boom Breaker Operator Cert' },
+          { title: 'Grizzly Lancing / Rigging Attendant', tier: 'L2', count: 2, cert: 'WAH & Rigger Level-2' },
+          { title: 'Crusher Isolation Spotter', tier: 'L3', count: 1, cert: 'Authorized LOTO Isolator' }
+        ],
+        totalCrew: 4
+      },
+      {
+        id: 12,
+        domain: 'Concentrator',
+        site: 'Sindesar Khurd UG Mine',
+        activity: 'SAG / Ball Mill Liner Bolt Tightening & Chute Inspection',
+        hazards: 'Unintended mill rotation (crush fatality risk), heavy liner plate drop, confined space inside shell',
+        permits: ['Multi-Lock Mill Inch/LOTO Permit', 'Confined Space Entry Permit', 'Heavy Rigging PTW'],
+        ppe: 'Personal LOTO padlock & tag, harness, impact wrench anti-vibration gloves',
+        roles: [
+          { title: 'Mill Maintenance Foreman', tier: 'L4', count: 1, cert: 'Mill Relining Supervisor L4' },
+          { title: 'Authorized Mill LOTO Electrician', tier: 'L4', count: 1, cert: 'HT/LT Mill Drive Isolation' },
+          { title: 'Millwright Mechanical Fitter', tier: 'L3', count: 3, cert: 'Heavy Rotary Millwright L3' },
+          { title: 'Mill Trunnion Hole Watcher', tier: 'L2', count: 1, cert: 'Confined Space Standby Pass' }
+        ],
+        totalCrew: 6
+      },
+      {
+        id: 13,
+        domain: 'Concentrator',
+        site: 'Zawar Underground Mines',
+        activity: 'Flotation Cell Reagent Preparation & Dosing Line Flushing',
+        hazards: 'Chemical exposure (Sodium Isopropyl Xanthate, Copper Sulphate), noxious vapor, drum lifting strain',
+        permits: ['HAZMAT Chemical Mixing Permit', 'MSDS & Eye-Wash Verification'],
+        ppe: 'Organic vapor cartridge mask, chemical splash suit, neoprene gloves, face shield',
+        roles: [
+          { title: 'Flotation Reagent Operator', tier: 'L3', count: 1, cert: 'Chemical Dosing Operator L3' },
+          { title: 'Hoist & Drum Charging Helper', tier: 'L2', count: 2, cert: 'HAZMAT Handling Pass' }
+        ],
+        totalCrew: 3
+      },
+      {
+        id: 14,
+        domain: 'Concentrator',
+        site: 'Dariba Smelter & Concentrator',
+        activity: 'Tailings Dam (TSF) Slurry Pipeline Spigot Changeover',
+        hazards: 'High-pressure slurry line burst, soft/unstable tailings beach footing, heat exhaustion',
+        permits: ['Pipeline Pressure Isolation PTW', 'TSF Embankment Access Clearance'],
+        ppe: 'Life jacket (near decant pond), high-grip gumboots, sun protection, two-way radio',
+        roles: [
+          { title: 'Tailings Pipeline Chargehand', tier: 'L3', count: 1, cert: 'Slurry Line Supervisor Pass' },
+          { title: 'Pipe Fitter / Flange Rigger', tier: 'L2', count: 2, cert: 'Pipeline Fitting & Rigging L2' },
+          { title: 'Spigot Valve Helper', tier: 'L1', count: 2, cert: 'TSF Safety Induction' }
+        ],
+        totalCrew: 5
+      },
+      {
+        id: 15,
+        domain: 'Maintenance',
+        site: 'Rampura Agucha UG Mine',
+        activity: 'UG Production Shaft Winder Rope & Cage Guide Inspection',
+        hazards: 'Fall down 900m vertical shaft, unexpected cage movement, wire rope pinch & grease slip',
+        permits: ['DGMS Shaft Inspection Permit', 'Winder Brake LOTO', 'Shaft Top Working Platform PTW'],
+        ppe: 'Twin-lanyard shaft rescue harness, helmet chin-strap, non-slip rigger boots, VHF radio',
+        roles: [
+          { title: 'Shaft Maintenance Foreman', tier: 'L4', count: 1, cert: 'DGMS Shaft Supervisor Cert' },
+          { title: 'Authorized Shaft Banksman / Onsetter', tier: 'L3', count: 1, cert: 'DGMS Banksman Certificate' },
+          { title: 'Specialized Shaft Rigger', tier: 'L4', count: 2, cert: 'Vertical Shaft Rescue & Rigging L4' },
+          { title: 'Winder Control Electrician', tier: 'L3', count: 1, cert: 'Winder PLC & Drive Cert' }
+        ],
+        totalCrew: 5
+      },
+      {
+        id: 16,
+        domain: 'Maintenance',
+        site: 'Chanderiya Lead-Zinc Smelter',
+        activity: 'Smelter EOT Crane Hoist Wire Rope Replacement & Load Testing',
+        hazards: 'Dropped object from 18m gantry, proximity to live down-shop conductor busbars, rope snap',
+        permits: ['Work at Height (>15m) Permit', 'Crane Bay Rail Stopper & Busbar LOTO', 'Heavy Rigging PTW'],
+        ppe: 'Full-body shock-absorbing harness, tethered tool lanyard belt, hard hat',
+        roles: [
+          { title: 'Crane Maintenance Supervisor', tier: 'L4', count: 1, cert: 'EOT Inspection & Load Test L4' },
+          { title: 'High-Elevation Rigger', tier: 'L3', count: 2, cert: 'Advanced Rigging & WAH L3' },
+          { title: 'Mechanical Crane Fitter', tier: 'L3', count: 1, cert: 'Hoist Gearbox & Drum Fitter' },
+          { title: 'Crane Busbar Electrician', tier: 'L3', count: 1, cert: 'Industrial Electrical LOTO Cert' },
+          { title: 'Floor Barricade Sentry', tier: 'L1', count: 1, cert: 'Drop-Zone Watcher Pass' }
+        ],
+        totalCrew: 6
+      },
+      {
+        id: 17,
+        domain: 'Maintenance',
+        site: 'Sindesar Khurd UG Mine',
+        activity: 'Ore Conveyor Belt Hot Vulcanizing / Splicing & Counterweight LOTO',
+        hazards: 'Gravity take-up counterweight drop, belt pull-in, 160°C vulcanizing platen burns, solvent fumes',
+        permits: ['Conveyor Zero-Energy LOTO Permit', 'Hot Work Permit', 'Heavy Clamping Rigging Pass'],
+        ppe: 'Heat-resistant gloves, organic vapor mask, personal LOTO lock, safety shoes',
+        roles: [
+          { title: 'Lead Belt Vulcanizing Technician', tier: 'L4', count: 1, cert: 'Hot Splice & Belt Tech L4' },
+          { title: 'Conveyor Mechanical Fitter / Rigger', tier: 'L3', count: 2, cert: 'Counterweight LOTO & Rigging L3' },
+          { title: 'Certified Fire Watcher', tier: 'L2', count: 1, cert: 'Hot Work Fire Safety Pass' },
+          { title: 'Belt Pulling & Clamping Helper', tier: 'L1', count: 2, cert: 'Conveyor Safety Induction' }
+        ],
+        totalCrew: 6
+      },
+      {
+        id: 18,
+        domain: 'Maintenance',
+        site: 'Chanderiya Lead-Zinc Smelter',
+        activity: '33kV / 11kV Substation VCB & Transformer Preventive Maintenance',
+        hazards: 'Lethal high-voltage arc flash, back-feed electrocution, transformer dielectric oil fire',
+        permits: ['High-Voltage Electrical PTW', 'Feeder Earth-Switch LOTO', 'Arc-Flash Boundary Clearance'],
+        ppe: '40 cal/cm² Arc-Flash Suit & Hood, 33kV Class-4 dielectric gloves, insulated rescue hook',
+        roles: [
+          { title: 'HT Authorized Switching Engineer', tier: 'L4', count: 1, cert: 'CEA / State HT Supervisory License' },
+          { title: 'Licensed HT Wireman / Electrician', tier: 'L4', count: 2, cert: '33kV HT Wireman License' },
+          { title: 'Relay & Insulation Testing Tech', tier: 'L3', count: 1, cert: 'HV Relay & Megger Testing Cert' },
+          { title: 'Electrical CPR / First-Aid Standby', tier: 'L2', count: 1, cert: 'Arc-Flash Rescue & CPR Cert' }
+        ],
+        totalCrew: 5
+      },
+      {
+        id: 19,
+        domain: 'Maintenance',
+        site: 'Dariba Smelter & Concentrator',
+        activity: 'Acid Slurry Pump Mechanical Seal & Impeller Overhaul',
+        hazards: 'Pressurized trapped acid spray on flange break, heavy pump volute pinch, shaft coupling alignment',
+        permits: ['Process Line Drain, Flush & Blind LOTO', 'Cold Work Maintenance PTW'],
+        ppe: 'Acid hood during flange break, chemical boots, cut-resistant mechanic gloves',
+        roles: [
+          { title: 'Rotary Equipment Millwright Fitter', tier: 'L4', count: 1, cert: 'Laser Alignment & Seal Tech L4' },
+          { title: 'Assistant Mechanical Fitter', tier: 'L2', count: 1, cert: 'Pump Overhaul Level-2' },
+          { title: 'Chain-Block Rigger', tier: 'L2', count: 1, cert: 'Lifting Tackle Rigging Pass' },
+          { title: 'Decontamination & Utility Helper', tier: 'L1', count: 1, cert: 'Chemical Flush Safety Pass' }
+        ],
+        totalCrew: 4
+      },
+      {
+        id: 20,
+        domain: 'Maintenance',
+        site: 'Zawar Underground Mines',
+        activity: 'Leach Tank Internal Rubber Lining & FRP Patch Repair',
+        hazards: 'Flammable styrene/MEK solvent vapors, toxic fumes inside closed tank, oxygen deficiency',
+        permits: ['Confined Space Entry Permit', 'Spark-Free Tool & Forced Ventilation PTW', 'LEL Gas Monitoring'],
+        ppe: 'Supplied-air airline respirator, spark-free bronze tools, anti-static coveralls, rescue harness',
+        roles: [
+          { title: 'Confined Space Lining Supervisor', tier: 'L4', count: 1, cert: 'CSE & Chemical Lining L4' },
+          { title: 'Authorized LEL / O2 Gas Tester', tier: 'L3', count: 1, cert: 'Multi-Gas Testing Cert' },
+          { title: 'Manhole Rescue Standby (Hole Watcher)', tier: 'L2', count: 1, cert: 'Tripod Winch Rescue Pass' },
+          { title: 'FRP / Rubber Lining Applicator', tier: 'L3', count: 2, cert: 'Spark-Free Lining Specialist L3' }
+        ],
+        totalCrew: 5
+      }
+    ];
+
+    // -----------------------------------------------------------------------
+    // 4. WORKER POOL & OPERATIONAL DATASETS
+    // -----------------------------------------------------------------------
+    const WORKER_POOL = [
+      { id: 'HZL-BP-1042', name: 'Resource #1042', bp: 'Apex Mining Contractors', site: 'Rampura Agucha UG Mine', role: 'Jumbo Drill Operator', tier: 'L4', cert: 'DGMS HEMM UG Drill License', certStatus: 'Valid (184d)', hoursUsed: 32, gateIn: '05:48 AM', status: 'On-Post' },
+      { id: 'HZL-BP-1089', name: 'Resource #1089', bp: 'Apex Mining Contractors', site: 'Sindesar Khurd UG Mine', role: 'Certified DGMS Shotfirer / Blaster', tier: 'L4', cert: 'DGMS Blaster Certificate', certStatus: 'Valid (210d)', hoursUsed: 36, gateIn: '05:51 AM', status: 'Standby' },
+      { id: 'HZL-BP-1120', name: 'Resource #1120', bp: 'Rajputana Industrial Services', site: 'Chanderiya Lead-Zinc Smelter', role: 'Confined Space Permit Supervisor', tier: 'L4', cert: 'CSE Level-4 Supervisor', certStatus: 'Valid (92d)', hoursUsed: 30, gateIn: '05:44 AM', status: 'Standby' },
+      { id: 'HZL-BP-1195', name: 'Resource #1195', bp: 'Mewar Engineering Works', site: 'Chanderiya Lead-Zinc Smelter', role: 'HT Authorized Switching Engineer', tier: 'L4', cert: 'CEA / State HT Supervisory License', certStatus: 'Valid (305d)', hoursUsed: 28, gateIn: '05:50 AM', status: 'Standby' },
+      { id: 'HZL-BP-1240', name: 'Resource #1240', bp: 'Aravalli Smelter Tech', site: 'Chanderiya Lead-Zinc Smelter', role: 'Cathode Stripping Machine Operator', tier: 'L3', cert: 'Cell House Automation L3', certStatus: 'Valid (145d)', hoursUsed: 34, gateIn: '05:49 AM', status: 'On-Post' },
+      { id: 'HZL-BP-1288', name: 'Resource #1288', bp: 'Hindustan Infra & Shaft Co.', site: 'Rampura Agucha UG Mine', role: 'Specialized Shaft Rigger', tier: 'L4', cert: 'Vertical Shaft Rescue & Rigging L4', certStatus: 'Valid (118d)', hoursUsed: 24, gateIn: '05:42 AM', status: 'Standby' },
+      { id: 'HZL-BP-1314', name: 'Resource #1314', bp: 'Mewar Engineering Works', site: 'Dariba Smelter & Concentrator', role: 'Rotary Equipment Millwright Fitter', tier: 'L4', cert: 'Laser Alignment & Seal Tech L4', certStatus: 'Valid (260d)', hoursUsed: 32, gateIn: '05:55 AM', status: 'Standby' },
+      { id: 'HZL-BP-1377', name: 'Resource #1377', bp: 'Rajputana Industrial Services', site: 'Zawar Underground Mines', role: 'Mechanized Bolter/Scaler Operator', tier: 'L4', cert: 'UG Bolter Rig License', certStatus: 'Expiring (11d)', hoursUsed: 40, gateIn: '05:53 AM', status: 'On-Post' },
+      { id: 'HZL-BP-1421', name: 'Resource #1421', bp: 'Aravalli Smelter Tech', site: 'Chanderiya Lead-Zinc Smelter', role: 'Authorized Gas Tester', tier: 'L3', cert: 'SO2/O2/CO Gas Testing Cert', certStatus: 'Valid (165d)', hoursUsed: 26, gateIn: '05:46 AM', status: 'Standby' },
+      { id: 'HZL-BP-1490', name: 'Resource #1490', bp: 'Apex Mining Contractors', site: 'Sindesar Khurd UG Mine', role: 'Lead Belt Vulcanizing Technician', tier: 'L4', cert: 'Hot Splice & Belt Tech L4', certStatus: 'Valid (88d)', hoursUsed: 30, gateIn: '05:47 AM', status: 'Standby' },
+      { id: 'HZL-BP-1532', name: 'Resource #1532', bp: 'Hindustan Infra & Shaft Co.', site: 'Zawar Underground Mines', role: 'LHD (Load-Haul-Dump) Operator', tier: 'L4', cert: 'Remote & Cabin LHD License', certStatus: 'Expired (Blocked)', hoursUsed: 0, gateIn: 'Blocked at Gate', status: 'Compliance Locked' },
+      { id: 'HZL-BP-1588', name: 'Resource #1588', bp: 'Mewar Engineering Works', site: 'Dariba Smelter & Concentrator', role: 'Filter Press Panel Operator', tier: 'L3', cert: 'Leach Filtration Operator L3', certStatus: 'Valid (202d)', hoursUsed: 32, gateIn: '05:50 AM', status: 'Standby' }
+    ];
+
+    const DATA_ANOMALIES = [
+      { id: 'ANOM-01', workerA: 'Record SAV-88412', workerB: 'Record APA-44219', issue: 'Fuzzy Duplicate across Saviour & Aparajitha (97.8% Match)', site: 'Rampura Agucha UG', action: 'Pending Merge', resolved: false },
+      { id: 'ANOM-02', workerA: 'Record Sheet-ZWR-19', workerB: 'Designation: "Bolter Man Gr-1"', issue: 'Non-Standard Trade Taxonomy (Maps to: Mechanized Bolter Operator L4)', site: 'Zawar Mines', action: 'Pending Normalization', resolved: false },
+      { id: 'ANOM-03', workerA: 'Record SAV-90114', workerB: 'Biometric ID: #NULL-0092', issue: 'Missing Turnstile Biometric Token Mapping in Saviour Registry', site: 'Chanderiya Smelter', action: 'Pending Token Link', resolved: false },
+      { id: 'ANOM-04', workerA: 'Record SAV-77120', workerB: 'Vendor: Apex vs Rajputana', issue: 'Dual Business Partner Enrollment Detected within 30-Day Window', site: 'Sindesar Khurd UG', action: 'Pending Vendor Lock', resolved: false },
+      { id: 'ANOM-05', workerA: 'Record SAV-65301', workerB: '0 Gate Punches in 45 Days', issue: 'Inactive Ghost Profile in Active Roster Pool', site: 'Dariba Smelter', action: 'Pending Archive', resolved: false }
+    ];
+
+    const SHORTFALL_QUEUE = [
+      {
+        id: 'SF-101',
+        site: 'Chanderiya Lead-Zinc Smelter',
+        zone: 'Cell House Stripper Line #2',
+        roleRequired: 'Cathode Stripping Machine Operator (L3)',
+        certRequired: 'Cell House Automation L3 + Acid Area PPE',
+        absentWorker: 'Scheduled Resource #1309 (No-Show at 06:15 AM Gate Grace)',
+        status: 'Open Shortfall',
+        candidates: [
+          { id: 'HZL-BP-1602', name: 'Reliever #1602', bp: 'Aravalli Smelter Tech', score: 98, skillMatch: '100% (L3 Certified)', otImpact: '₹0 (32/48 hrs used)', proximity: 'On-Site (Cell Bay 1)', fatigue: '16h Rest OK' },
+          { id: 'HZL-BP-1645', name: 'Reliever #1645', bp: 'Aravalli Smelter Tech', score: 91, skillMatch: '100% (L3 Certified)', otImpact: '₹0 (38/48 hrs used)', proximity: 'Gate #3 Checked-In', fatigue: '14h Rest OK' },
+          { id: 'HZL-BP-1699', name: 'Reliever #1699', bp: 'Rajputana Industrial', score: 74, skillMatch: '100% (L3 Certified)', otImpact: '+₹1,450 OT Warning (46/48 hrs)', proximity: 'Dariba Pool', fatigue: '12h Rest OK' }
+        ]
+      },
+      {
+        id: 'SF-102',
+        site: 'Rampura Agucha UG Mine',
+        zone: 'North Decline Level -420m',
+        roleRequired: 'Certified DGMS Shotfirer / Blaster (L4)',
+        certRequired: 'DGMS Blaster Certificate + Gas Testing',
+        absentWorker: 'Scheduled Resource #1104 (Medical Leave Logged)',
+        status: 'Open Shortfall',
+        candidates: [
+          { id: 'HZL-BP-1089', name: 'Reliever #1089', bp: 'Apex Mining Contractors', score: 99, skillMatch: '100% (DGMS L4 Blaster)', otImpact: '₹0 (36/48 hrs used)', proximity: 'Shaft Portal Standby', fatigue: '16h Rest OK' },
+          { id: 'HZL-BP-1712', name: 'Reliever #1712', bp: 'Apex Mining Contractors', score: 93, skillMatch: '100% (DGMS L4 Blaster)', otImpact: '₹0 (40/48 hrs used)', proximity: 'Surface Lamp Room', fatigue: '15h Rest OK' }
+        ]
+      },
+      {
+        id: 'SF-103',
+        site: 'Sindesar Khurd UG Mine',
+        zone: 'Paste Fill & Mill Maintenance',
+        roleRequired: 'HT Authorized Electrician (L4)',
+        certRequired: '33kV/11kV HT Wireman + Mill LOTO',
+        absentWorker: 'Scheduled Resource #1408 (Delayed at Turnstile)',
+        status: 'Open Shortfall',
+        candidates: [
+          { id: 'HZL-BP-1195', name: 'Reliever #1195', bp: 'Mewar Engineering Works', score: 97, skillMatch: '100% (HT L4 + LOTO)', otImpact: '₹0 (28/48 hrs used)', proximity: 'Substation Standby', fatigue: '18h Rest OK' }
+        ]
+      }
+    ];
+
+    const OT_INTERCEPT_QUEUE = [
+      { id: 'OT-201', site: 'Chanderiya Smelter', dept: 'Pyro Roaster Maintenance', requestedWorker: 'Resource #2041 (48/48 hrs exhausted)', otCost: 2450, aiAlternative: 'Resource #1421 (HZL-BP-1421 • 26/48 hrs)', skill: 'L3 Gas Tester & CSE', saved: false },
+      { id: 'OT-202', site: 'Rampura Agucha UG', dept: 'Shaft Winder Mechanical', requestedWorker: 'Resource #2088 (48/48 hrs exhausted)', otCost: 3100, aiAlternative: 'Resource #1288 (HZL-BP-1288 • 24/48 hrs)', skill: 'L4 Vertical Shaft Rigger', saved: false },
+      { id: 'OT-203', site: 'Dariba Smelter', dept: 'Hydro Leaching Filter Press', requestedWorker: 'Resource #2115 (46/48 hrs exhausted)', otCost: 1850, aiAlternative: 'Resource #1588 (HZL-BP-1588 • 32/48 hrs)', skill: 'L3 Filter Press Operator', saved: false },
+      { id: 'OT-204', site: 'Zawar Mines', dept: 'Mochia Underground Haulage', requestedWorker: 'Resource #2190 (48/48 hrs exhausted)', otCost: 2700, aiAlternative: 'Resource #1804 (HZL-BP-1804 • 30/48 hrs)', skill: 'L3 LPDT Operator', saved: false }
+    ];
+
+    const BP_VENDORS = [
+      { code: 'BP-01', name: 'Apex Mining Contractors Pvt Ltd', sites: 'Rampura Agucha, Sindesar Khurd', contracted: 5200, deployed: 5148, certRate: 100.0, absenteeism: 2.1, slaScore: 97.4 },
+      { code: 'BP-02', name: 'Rajputana Industrial Services', sites: 'Chanderiya, Zawar Mines', contracted: 4400, deployed: 4310, certRate: 99.8, absenteeism: 2.8, slaScore: 95.1 },
+      { code: 'BP-03', name: 'Mewar Engineering & Maintenance', sites: 'All 5 HZL Locations', contracted: 3800, deployed: 3765, certRate: 100.0, absenteeism: 1.9, slaScore: 98.2 },
+      { code: 'BP-04', name: 'Aravalli Smelter Tech LLP', sites: 'Chanderiya, Dariba Smelter', contracted: 3600, deployed: 3512, certRate: 99.6, absenteeism: 3.2, slaScore: 93.8 },
+      { code: 'BP-05', name: 'Hindustan Infra & Shaft Co.', sites: 'Rampura Agucha, Zawar UG', contracted: 2842, deployed: 2810, certRate: 100.0, absenteeism: 2.0, slaScore: 97.9 }
+    ];
+
+    // -----------------------------------------------------------------------
+    // 5. GLOBAL STATE STORE
+    // -----------------------------------------------------------------------
+    const state = {
+      currentView: 'home', // 'home' | 'login' | 'app'
+      selectedLoginRole: 'SUPER_USER',
+      activeRole: 'SUPER_USER',
+      activeTab: 'overview',
+      globalSite: 'ALL',
+      globalShift: 'Shift A',
+      complianceLockEnabled: true,
+      liveStreamPaused: false,
+      goldenRecordsCount: 19842,
+      anomaliesRemaining: 5,
+      relieversPlacedCount: 142,
+      otMoneySaved: 4285000, // ₹42.85 Lakhs
+      selectedJsaDomain: 'ALL',
+      selectedJsaActivityId: 1,
+      customJsaWorkText: '',
+      issuedPtwCount: 38,
+      whatIfProd: 105,
+      whatIfShutdown: 1,
+      whatIfAbs: 4.5,
+      handoverLogs: [
+        { time: '06:05 AM', shift: 'Shift C → Shift A', author: 'Shift Supervisor', site: 'Rampura Agucha UG', note: 'Level -420m Shotfirer reliever #1089 assigned via DRONA AI engine; Jumbo rig #4 hydraulic check completed.' },
+        { time: '05:50 AM', shift: 'Shift C → Shift A', author: 'HSE Safety Officer', site: 'Chanderiya Smelter', note: 'Roaster ESP Duct #2 Confined Space PTW queued; SCBA gas test verified and locked.' }
+      ],
+      auditLogs: [
+        { ts: '13:45:10', actor: 'Super User', module: 'Sec 12 • Middleware', detail: 'Bi-directional Saviour WMS roster sync verified (19,842 worker records).' },
+        { ts: '13:42:04', actor: 'DRONA AI Core', module: 'Sec 13 • JSA Allocator', detail: 'Validated DGMS Blaster & CSE permits across 20 standard HZL daily work templates.' },
+        { ts: '13:38:19', actor: 'HSE Safety Officer', module: 'Sec 02 • Compliance Lock', detail: 'Hard deployment lock enforced on HZL-BP-1532 due to expired UG LHD certificate.' }
+      ],
+      gateFeed: [
+        { time: '06:01:44', gate: 'Rampura Shaft Gate #1', worker: 'Resource #1042 (HZL-BP-1042)', role: 'Jumbo Operator L4', status: 'ON-TIME MATCH' },
+        { time: '06:01:39', gate: 'Chanderiya Turnstile #4', worker: 'Resource #1240 (HZL-BP-1240)', role: 'Cathode Stripper L3', status: 'ON-TIME MATCH' },
+        { time: '06:01:22', gate: 'Sindesar Portal #2', worker: 'Resource #1089 (HZL-BP-1089)', role: 'DGMS Blaster L4', status: 'STANDBY POOL' },
+        { time: '06:01:05', gate: 'Zawar Mine Gate #1', worker: 'Resource #1532 (HZL-BP-1532)', role: 'LHD Operator L4', status: 'BLOCKED: CERT EXPIRED' },
+        { time: '06:00:48', gate: 'Chanderiya Turnstile #2', worker: 'Resource #1309 (HZL-BP-1309)', role: 'Cathode Stripper L3', status: 'NO-SHOW TRIGGERED' }
+      ]
+    };
+
+    let activeChartInstances = [];
+
+    // -----------------------------------------------------------------------
+    // 6. UTILITY & TOAST / MODAL HELPERS
+    // -----------------------------------------------------------------------
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const el = document.createElement('div');
+      const colorClass = type === 'success'
+        ? 'border-cyan-500/50 bg-[#081024]/95 text-cyan-300'
+        : type === 'warn'
+        ? 'border-rose-500/50 bg-[#081024]/95 text-rose-300'
+        : 'border-emerald-500/50 bg-[#081024]/95 text-emerald-300';
+      el.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-xl text-xs font-medium flex items-center gap-2.5 transition-all ${colorClass}`;
+      el.innerHTML = `<span class="w-2 h-2 rounded-full bg-current animate-ping shrink-0"></span><span>${message}</span>`;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+      }, 3400);
+    }
+
+    function openModal(title, htmlContent) {
+      const modal = document.getElementById('global-modal');
+      document.getElementById('modal-title').innerHTML = title;
+      document.getElementById('modal-body').innerHTML = htmlContent;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('global-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function logAudit(moduleName, detailText) {
+      const now = new Date();
+      const ts = now.toTimeString().split(' ')[0];
+      const roleObj = RBAC_ROLES[state.activeRole];
+      state.auditLogs.unshift({
+        ts,
+        actor: roleObj.roleLabel,
+        module: moduleName,
+        detail: detailText
+      });
+    }
+
+    function destroyActiveCharts() {
+      activeChartInstances.forEach(c => {
+        try { c.destroy(); } catch (e) {}
+      });
+      activeChartInstances = [];
+    }
+
+    // -----------------------------------------------------------------------
+    // 7. VIEW NAVIGATION & RBAC LOGIN CONTROLLERS
+    // -----------------------------------------------------------------------
+    function navigateView(viewName) {
+      state.currentView = viewName;
+      const views = ['home', 'login', 'app'];
+      views.forEach(v => {
+        const el = document.getElementById('view-' + v);
+        if (!el) return;
+        if (v === viewName) {
+          el.classList.remove('hidden');
+          el.classList.add('flex');
+        } else {
+          el.classList.add('hidden');
+          el.classList.remove('flex');
+        }
+      });
+      if (viewName === 'login') {
+        renderRbacLoginScreen();
+      } else if (viewName === 'app') {
+        renderSidebarNav();
+        renderActiveTab();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderRbacLoginScreen() {
+      const container = document.getElementById('rbac-role-cards');
+      if (!container) return;
+      container.innerHTML = Object.values(RBAC_ROLES).map(r => {
+        const active = state.selectedLoginRole === r.id;
+        return `
+          <div onclick="selectLoginRole('${r.id}')" class="p-3 rounded-xl border cursor-pointer transition flex items-center justify-between ${
+            active
+              ? 'bg-cyan-500/15 border-cyan-400 text-white shadow-md'
+              : 'bg-slate-900/70 border-slate-800 text-slate-300 hover:border-slate-700'
+          }">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-sm text-white">${r.roleLabel}</span>
+                ${r.id === 'SUPER_USER' ? '<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-400 text-slate-950 font-extrabold">FULL ACCESS</span>' : ''}
+              </div>
+              <div class="text-xs text-slate-400">${r.subtitle}</div>
+            </div>
+            <span class="text-[11px] font-mono ${active ? 'text-cyan-300 font-bold' : 'text-slate-400'}">${active ? '● Active' : 'Select'}</span>
+          </div>
+        `;
+      }).join('');
+
+      const role = RBAC_ROLES[state.selectedLoginRole];
+      document.getElementById('login-email').value = role.code;
+      document.getElementById('login-phone').value = role.token;
+      document.getElementById('login-scope').value = role.scope;
+      document.getElementById('rbac-preview-title').textContent = `Selected Role: ${role.roleLabel}`;
+      document.getElementById('rbac-preview-desc').textContent = role.desc;
+      document.getElementById('rbac-preview-badge').textContent = role.level;
+
+      const tbody = document.getElementById('rbac-matrix-tbody');
+      tbody.innerHTML = NAV_SECTIONS.map(sec => {
+        let canRead = true;
+        let canEdit = role.id === 'SUPER_USER';
+        let canOverride = role.id === 'SUPER_USER';
+
+        if (role.id === 'PLANT_HEAD') {
+          canEdit = ['overview', 'sec3', 'sec7', 'sec9', 'sec10', 'sec11'].includes(sec.id);
+          canOverride = ['sec7'].includes(sec.id);
+        } else if (role.id === 'SUPERVISOR') {
+          canEdit = ['sec4', 'sec5', 'sec6', 'sec8', 'sec13'].includes(sec.id);
+          canOverride = false;
+        } else if (role.id === 'SAFETY_OFFICER') {
+          canEdit = ['sec2', 'sec12', 'sec13'].includes(sec.id);
+          canOverride = ['sec2', 'sec13'].includes(sec.id);
+        } else if (role.id === 'BP_VENDOR') {
+          canRead = ['overview', 'sec2', 'sec9'].includes(sec.id);
+          canEdit = ['sec9'].includes(sec.id);
+          canOverride = false;
+        }
+
+        return `
+          <tr class="hover:bg-slate-900/50">
+            <td class="py-2 px-2 font-medium text-white">${sec.code}. ${sec.name} ${sec.ai ? '<span class="text-[10px] font-mono text-cyan-300">[AI]</span>' : ''}</td>
+            <td class="py-2 px-2 font-mono ${canRead ? 'text-emerald-400' : 'text-rose-400'}">${canRead ? '✔ Allowed' : '🔒 Restricted'}</td>
+            <td class="py-2 px-2 font-mono ${canEdit ? 'text-cyan-300' : 'text-slate-400'}">${canEdit ? '✔ Read/Write' : 'View Only'}</td>
+            <td class="py-2 px-2 font-mono ${canOverride ? 'text-emerald-300' : 'text-slate-400'}">${canOverride ? '⚡ Super/Override' : 'Standard Lock'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function selectLoginRole(roleId) {
+      state.selectedLoginRole = roleId;
+      renderRbacLoginScreen();
+    }
+
+    function handleLoginSubmit(e) {
+      e.preventDefault();
+      state.activeRole = state.selectedLoginRole;
+      const role = RBAC_ROLES[state.activeRole];
+      const switcher = document.getElementById('header-role-switcher');
+      if (switcher) switcher.value = state.activeRole;
+      logAudit('RBAC Login', `Authenticated session with role: ${role.roleLabel}`);
+      navigateView('app');
+      showToast(`DRONA launched under role: ${role.roleLabel}`, 'success');
+    }
+
+    function switchRoleFromHeader(roleId) {
+      state.activeRole = roleId;
+      state.selectedLoginRole = roleId;
+      const role = RBAC_ROLES[roleId];
+      logAudit('RBAC Role Switch', `Switched active session role to ${role.roleLabel}`);
+      renderSidebarNav();
+      renderActiveTab();
+      showToast(`Active RBAC Role switched to: ${role.roleLabel}`, 'info');
+    }
+
+    function toggleMobileSidebar() {
+      const sb = document.getElementById('app-sidebar');
+      if (!sb) return;
+      sb.classList.toggle('hidden');
+      sb.classList.toggle('flex');
+      sb.classList.toggle('fixed');
+      sb.classList.toggle('z-40');
+      sb.classList.toggle('inset-y-0');
+      sb.classList.toggle('left-0');
+    }
+
+    function handleGlobalFilterChange() {
+      state.globalSite = document.getElementById('global-site-filter').value;
+      state.globalShift = document.getElementById('global-shift-filter').value;
+      renderActiveTab();
+      showToast(`Filter updated: ${state.globalSite === 'ALL' ? 'All 5 HZL Locations' : state.globalSite} • ${state.globalShift}`, 'info');
+    }
+
+    // -----------------------------------------------------------------------
+    // 8. SIDEBAR & MOBILE QUICK-PILL NAVIGATION
+    // -----------------------------------------------------------------------
+    function renderSidebarNav() {
+      const list = document.getElementById('sidebar-nav-list');
+      if (list) {
+        list.innerHTML = NAV_SECTIONS.map(sec => {
+          const isActive = state.activeTab === sec.id;
+          return `
+            <button type="button" onclick="switchTab('${sec.id}')" class="w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition ${
+              isActive
+                ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-white border border-cyan-500/40 shadow'
+                : 'text-slate-400 hover:bg-slate-800/70 hover:text-slate-200'
+            }">
+              <div class="flex items-center gap-2 truncate">
+                <span class="font-mono text-[11px] ${isActive ? 'text-cyan-400 font-bold' : 'text-slate-400'}">${sec.code}</span>
+                <span class="truncate">${sec.name}</span>
+              </div>
+              ${sec.ai ? '<span class="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">AI</span>' : ''}
+            </button>
+          `;
+        }).join('');
+      }
+
+      const mobilePills = document.getElementById('mobile-top-pills');
+      if (mobilePills) {
+        mobilePills.innerHTML = NAV_SECTIONS.map(sec => {
+          const isActive = state.activeTab === sec.id;
+          return `
+            <button type="button" onclick="switchTab('${sec.id}')" class="shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-mono font-semibold transition ${
+              isActive
+                ? 'bg-cyan-400 text-slate-950 font-bold'
+                : 'bg-slate-900 text-slate-300 border border-slate-800'
+            }">
+              ${sec.code}. ${sec.name}
+            </button>
+          `;
+        }).join('');
+      }
+    }
+
+    function switchTab(tabId) {
+      state.activeTab = tabId;
+      const sb = document.getElementById('app-sidebar');
+      if (sb && sb.classList.contains('fixed')) {
+        sb.classList.add('hidden');
+        sb.classList.remove('flex', 'fixed', 'z-40', 'inset-y-0', 'left-0');
+      }
+      renderSidebarNav();
+      renderActiveTab();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderActiveTab() {
+      destroyActiveCharts();
+      const sec = NAV_SECTIONS.find(s => s.id === state.activeTab) || NAV_SECTIONS[0];
+      const role = RBAC_ROLES[state.activeRole];
+
+      document.getElementById('active-sec-tag').textContent = `SECTION ${sec.code} • ${sec.ai ? 'DRONA AI ENGINE' : 'CORE GOVERNANCE'}`;
+      document.getElementById('active-sec-rbac-pill').textContent = `ROLE: ${role.roleLabel.toUpperCase()}`;
+      document.getElementById('active-sec-title').textContent = sec.fullTitle;
+      document.getElementById('active-sec-subtitle').textContent = sec.subtitle;
+
+      const container = document.getElementById('tab-content-area');
+      if (!container) return;
+
+      switch (state.activeTab) {
+        case 'overview': renderTabOverview(container); break;
+        case 'sec1': renderTabSec1(container); break;
+        case 'sec2': renderTabSec2(container); break;
+        case 'sec3': renderTabSec3(container); break;
+        case 'sec4': renderTabSec4(container); break;
+        case 'sec5': renderTabSec5(container); break;
+        case 'sec6': renderTabSec6(container); break;
+        case 'sec7': renderTabSec7(container); break;
+        case 'sec8': renderTabSec8(container); break;
+        case 'sec9': renderTabSec9(container); break;
+        case 'sec10': renderTabSec10(container); break;
+        case 'sec11': renderTabSec11(container); break;
+        case 'sec12': renderTabSec12(container); break;
+        case 'sec13': renderTabSec13(container); break;
+        default: renderTabOverview(container);
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // TAB 00: EXECUTIVE OVERVIEW
+    // -----------------------------------------------------------------------
+    function renderTabOverview(container) {
+      container.innerHTML = `
+        <!-- Top 4 Target KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-cyan-400">
+            <div class="flex items-center justify-between text-xs text-slate-400">
+              <span>KPI 1: Absenteeism Effort</span>
+              <span class="font-mono text-cyan-400">ON TARGET</span>
+            </div>
+            <div class="text-2xl font-extrabold text-white font-mono mt-1">-78.4% Effort</div>
+            <div class="text-xs text-slate-400 mt-1">Reliever allocation cut from 42 mins to <strong class="text-white">18 seconds</strong> via DRONA AI.</div>
+          </div>
+
+          <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-blue-400">
+            <div class="flex items-center justify-between text-xs text-slate-400">
+              <span>KPI 2: Multi-Site Visibility</span>
+              <span class="font-mono text-blue-400">5/5 LIVE</span>
+            </div>
+            <div class="text-2xl font-extrabold text-white font-mono mt-1">${state.goldenRecordsCount.toLocaleString()} Workers</div>
+            <div class="text-xs text-slate-400 mt-1">Real-time biometric &amp; turnstile sync across all HZL mines and smelters.</div>
+          </div>
+
+          <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-emerald-400">
+            <div class="flex items-center justify-between text-xs text-slate-400">
+              <span>KPI 3: Certified Deployment</span>
+              <span class="font-mono text-emerald-300">HARD LOCK ON</span>
+            </div>
+            <div class="text-2xl font-extrabold text-emerald-400 font-mono mt-1">100.0% Skilled</div>
+            <div class="text-xs text-slate-400 mt-1">Zero uncertified or expired-pass workers permitted onto shift rosters.</div>
+          </div>
+
+          <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-indigo-400">
+            <div class="flex items-center justify-between text-xs text-slate-400">
+              <span>KPI 4: Productivity &amp; OT</span>
+              <span class="font-mono text-indigo-300">10–15% GOAL</span>
+            </div>
+            <div class="text-2xl font-extrabold text-white font-mono mt-1">+14.2% / ₹${(state.otMoneySaved / 100000).toFixed(2)}L</div>
+            <div class="text-xs text-slate-400 mt-1">Productivity gain &amp; unmanaged overtime cost avoided via Aparajitha bridge.</div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="text-sm font-bold text-white">Planned vs. Actual Shift Deployment Across HZL Sites</h3>
+                <p class="text-xs text-slate-400">Live biometric gate reconciliation (${state.globalShift})</p>
+              </div>
+              <span class="text-xs font-mono text-cyan-400">98.6% Fill Rate</span>
+            </div>
+            <div class="relative h-60 sm:h-64">
+              <canvas id="chart-overview-sites"></canvas>
+            </div>
+          </div>
+
+          <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="text-sm font-bold text-white">Productivity Gain &amp; Overtime Leakage Reduction Trend</h3>
+                <p class="text-xs text-slate-400">DRONA Smart Rostering + Reliever Optimization impact</p>
+              </div>
+              <span class="text-xs font-mono text-emerald-300">Target: 10–15%</span>
+            </div>
+            <div class="relative h-60 sm:h-64">
+              <canvas id="chart-overview-ot"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- All 13 Sectional Modules Directory Grid -->
+        <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white">DRONA 13-Section Platform Architecture (Tap Any Module to Open)</h3>
+              <p class="text-xs text-slate-400">Digital Resource Optimization &amp; Networked Allocation — 7 AI sections + 20 HZL JSA Jobs</p>
+            </div>
+            <span class="text-xs font-mono text-cyan-300 px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/30">7 AI Modules Active</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            ${NAV_SECTIONS.filter(s => s.id !== 'overview').map(s => `
+              <div onclick="switchTab('${s.id}')" class="p-4 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-cyan-500/50 cursor-pointer transition group flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-mono font-bold text-cyan-400">SECTION ${s.code}</span>
+                    ${s.ai
+                      ? '<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">🤖 DRONA AI</span>'
+                      : '<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">CORE MODULE</span>'}
+                  </div>
+                  <div class="text-sm font-bold text-white mt-1.5 group-hover:text-cyan-300 transition">${s.name}</div>
+                  <p class="text-xs text-slate-400 mt-1 line-clamp-2">${s.subtitle}</p>
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-emerald-300 font-semibold">
+                  <span>Open Module</span>
+                  <span>→</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      const ctx1 = document.getElementById('chart-overview-sites');
+      if (ctx1 && window.Chart) {
+        activeChartInstances.push(new Chart(ctx1, {
+          type: 'bar',
+          data: {
+            labels: ['Rampura UG', 'Sindesar UG', 'Chanderiya', 'Dariba', 'Zawar UG'],
+            datasets: [
+              { label: 'Planned Roster', data: [1850, 1420, 1380, 960, 890], backgroundColor: 'rgba(59, 130, 246, 0.45)', borderColor: '#60a5fa', borderWidth: 1.5, borderRadius: 6 },
+              { label: 'Actual Gate + Relievers', data: [1842, 1412, 1371, 954, 885], backgroundColor: 'rgba(6, 182, 212, 0.75)', borderColor: '#22d3ee', borderWidth: 1.5, borderRadius: 6 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 11 } } } },
+            scales: {
+              x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(30,41,59,0.5)' } },
+              y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(30,41,59,0.5)' } }
+            }
+          }
+        }));
+      }
+
+      const ctx2 = document.getElementById('chart-overview-ot');
+      if (ctx2 && window.Chart) {
+        activeChartInstances.push(new Chart(ctx2, {
+          type: 'line',
+          data: {
+            labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4', 'Wk 5', 'Wk 6'],
+            datasets: [
+              { label: 'Productivity Gain (%)', data: [2.1, 4.8, 8.4, 11.2, 13.0, 14.2], borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.15)', fill: true, tension: 0.35 },
+              { label: 'Unmanaged Overtime (%)', data: [14.5, 12.1, 8.9, 6.2, 4.1, 2.8], borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.1)', fill: false, tension: 0.35 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 11 } } } },
+            scales: {
+              x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(30,41,59,0.5)' } },
+              y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(30,41,59,0.5)' } }
+            }
+          }
+        }));
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 01: AI MASTER DATA CLEANSING & GOLDEN RECORD HUB
+    // -----------------------------------------------------------------------
+    function renderTabSec1(container) {
+      const unresolvedCount = DATA_ANOMALIES.filter(a => !a.resolved).length;
+      container.innerHTML = `
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <div class="glass-panel p-3.5 sm:p-4 rounded-2xl">
+            <div class="text-xs text-slate-400">Raw Records</div>
+            <div class="text-xl sm:text-2xl font-extrabold text-white font-mono mt-1">20,418</div>
+            <div class="text-[10px] text-slate-400 mt-1">Saviour + Aparajitha + Sheets</div>
+          </div>
+          <div class="glass-panel p-3.5 sm:p-4 rounded-2xl">
+            <div class="text-xs text-slate-400">Golden Records</div>
+            <div class="text-xl sm:text-2xl font-extrabold text-cyan-400 font-mono mt-1">${state.goldenRecordsCount.toLocaleString()}</div>
+            <div class="text-[10px] text-slate-400 mt-1">Unified Enterprise IDs</div>
+          </div>
+          <div class="glass-panel p-3.5 sm:p-4 rounded-2xl">
+            <div class="text-xs text-slate-400">AI Deduplicated</div>
+            <div class="text-xl sm:text-2xl font-extrabold text-emerald-300 font-mono mt-1">571</div>
+            <div class="text-[10px] text-slate-400 mt-1">Fuzzy &amp; Gate Token Match</div>
+          </div>
+          <div class="glass-panel p-3.5 sm:p-4 rounded-2xl">
+            <div class="text-xs text-slate-400">Open Anomalies</div>
+            <div class="text-xl sm:text-2xl font-extrabold ${unresolvedCount > 0 ? 'text-rose-400' : 'text-emerald-400'} font-mono mt-1">${unresolvedCount}</div>
+            <div class="text-[10px] text-slate-400 mt-1">Awaiting AI Merge</div>
+          </div>
+        </div>
+
+        <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-bold text-white">DRONA AI Master Data Cleansing &amp; Deduplication Queue</h3>
+              <p class="text-xs text-slate-400">Reconciles fragmented worker records across Saviour WMS, Aparajitha Payroll, and local site skill spreadsheets.</p>
+            </div>
+            <button type="button" onclick="resolveAllAnomalies()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition">
+              🤖 Run AI Batch Auto-Cleanse (${unresolvedCount} Pending)
+            </button>
+          </div>
+
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-left border-collapse text-xs min-w-[600px]">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2.5 px-3">Anomaly ID</th>
+                  <th class="py-2.5 px-3">Primary Record (Saviour)</th>
+                  <th class="py-2.5 px-3">Conflicting Record</th>
+                  <th class="py-2.5 px-3">AI Detected Issue</th>
+                  <th class="py-2.5 px-3">Site</th>
+                  <th class="py-2.5 px-3">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                ${DATA_ANOMALIES.map((a, idx) => `
+                  <tr class="hover:bg-slate-900/50">
+                    <td class="py-3 px-3 font-mono text-cyan-300 font-bold">${a.id}</td>
+                    <td class="py-3 px-3 text-white font-medium">${a.workerA}</td>
+                    <td class="py-3 px-3 text-slate-300 font-mono">${a.workerB}</td>
+                    <td class="py-3 px-3 text-cyan-200">${a.issue}</td>
+                    <td class="py-3 px-3 text-slate-400">${a.site}</td>
+                    <td class="py-3 px-3">
+                      ${a.resolved
+                        ? '<span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono text-[11px]">✔ Merged</span>'
+                        : `<button type="button" onclick="resolveSingleAnomaly(${idx})" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 font-semibold transition">Merge & Fix</button>`
+                      }
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function resolveSingleAnomaly(idx) {
+      if (!DATA_ANOMALIES[idx].resolved) {
+        DATA_ANOMALIES[idx].resolved = true;
+        state.goldenRecordsCount += 1;
+        logAudit('Sec 01 • AI Data Cleansing', `Merged anomaly ${DATA_ANOMALIES[idx].id} into Golden Registry.`);
+        renderActiveTab();
+        showToast(`Anomaly ${DATA_ANOMALIES[idx].id} cleansed & synced to Golden Record!`, 'success');
+      }
+    }
+
+    function resolveAllAnomalies() {
+      let count = 0;
+      DATA_ANOMALIES.forEach(a => {
+        if (!a.resolved) { a.resolved = true; count++; }
+      });
+      state.goldenRecordsCount += count;
+      logAudit('Sec 01 • AI Batch Cleanse', `Executed AI fuzzy deduplication & NLP taxonomy normalization on ${count} records.`);
+      renderActiveTab();
+      showToast(count > 0 ? `AI Batch Cleanse complete: ${count} anomalies merged into Golden Registry!` : 'All records are already cleansed and synchronized.', 'success');
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 02: SKILL MATRIX & 100% CERTIFICATION GOVERNANCE
+    // -----------------------------------------------------------------------
+    function renderTabSec2(container) {
+      container.innerHTML = `
+        <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 class="text-base font-bold text-white">100% Certified Deployment Hard-Lock Engine</h3>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-mono ${state.complianceLockEnabled ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'}">
+                ${state.complianceLockEnabled ? 'ACTIVE • ZERO UNCERTIFIED DEPLOYMENTS' : 'WARNING • ADVISORY MODE'}
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Automatically blocks roster assignment and gate entry if a worker's DGMS license, safety pass, or medical fitness is expired.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <button type="button" onclick="simulateBlockedAssignment()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold transition">
+              🛡️ Test Compliance Block (HZL-BP-1532)
+            </button>
+            <button type="button" onclick="toggleComplianceLock()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition">
+              Toggle Lock State
+            </button>
+          </div>
+        </div>
+
+        <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="text-base font-bold text-white">Enterprise Skill Matrix &amp; Statutory Certification Registry</h3>
+            <button type="button" onclick="sendExpiryRenewalAlerts()" class="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition">
+              🔔 Dispatch 30/15/7-Day Expiry Alerts to BPs
+            </button>
+          </div>
+
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-left border-collapse text-xs min-w-[680px]">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2.5 px-3">Resource ID</th>
+                  <th class="py-2.5 px-3">Business Partner</th>
+                  <th class="py-2.5 px-3">HZL Location</th>
+                  <th class="py-2.5 px-3">Trade Designation</th>
+                  <th class="py-2.5 px-3">Skill Tier</th>
+                  <th class="py-2.5 px-3">Statutory / Safety Cert</th>
+                  <th class="py-2.5 px-3">Validity Status</th>
+                  <th class="py-2.5 px-3">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                ${WORKER_POOL.map((w, idx) => `
+                  <tr class="hover:bg-slate-900/50">
+                    <td class="py-3 px-3"><span class="font-mono text-cyan-300 font-bold">${w.id}</span><div class="text-white font-medium">${w.name}</div></td>
+                    <td class="py-3 px-3 text-slate-300">${w.bp}</td>
+                    <td class="py-3 px-3 text-slate-400">${w.site}</td>
+                    <td class="py-3 px-3 text-white font-semibold">${w.role}</td>
+                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono font-bold">${w.tier}</span></td>
+                    <td class="py-3 px-3 text-slate-300">${w.cert}</td>
+                    <td class="py-3 px-3 font-mono ${
+                      w.certStatus.includes('Expired') ? 'text-rose-400 font-bold' : w.certStatus.includes('Expiring') ? 'text-amber-300 font-bold' : 'text-emerald-400'
+                    }">${w.certStatus}</td>
+                    <td class="py-3 px-3">
+                      <button type="button" onclick="renewWorkerCert(${idx})" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-cyan-500/20 hover:text-cyan-300 text-slate-300 border border-slate-700 text-[11px] transition">
+                        Renew / Upgrade
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function toggleComplianceLock() {
+      state.complianceLockEnabled = !state.complianceLockEnabled;
+      logAudit('Sec 02 • Compliance Lock', `100% Certification Deployment Lock set to: ${state.complianceLockEnabled}`);
+      renderActiveTab();
+      showToast(`100% Certification Hard-Lock is now ${state.complianceLockEnabled ? 'ENABLED' : 'IN ADVISORY MODE'}`, state.complianceLockEnabled ? 'success' : 'warn');
+    }
+
+    function simulateBlockedAssignment() {
+      openModal('🛡️ 100% Compliance Lock — Assignment Blocked', `
+        <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-200 space-y-2">
+          <div class="font-bold text-base text-rose-300">⛔ HARD DEPLOYMENT LOCK TRIGGERED</div>
+          <p>Attempted to roster <strong>Resource #1532 (HZL-BP-1532)</strong> as <strong>LHD Operator (L4)</strong> at <strong>Zawar Underground Mines</strong>.</p>
+          <div class="text-xs font-mono bg-slate-950 p-3 rounded-lg border border-rose-500/30 space-y-1">
+            <div>• Mandatory Permit: Remote &amp; Cabin LHD License (DGMS UG)</div>
+            <div>• Current Status: EXPIRED (Blocked at Turnstile &amp; Saviour Upload)</div>
+            <div>• DRONA Action: Prevented roster commit &amp; queued AI Reliever replacement.</div>
+          </div>
+        </div>
+      `);
+    }
+
+    function renewWorkerCert(idx) {
+      WORKER_POOL[idx].certStatus = 'Valid (365d Renewed)';
+      WORKER_POOL[idx].status = 'Standby';
+      logAudit('Sec 02 • Cert Renewal', `Renewed statutory certification for ${WORKER_POOL[idx].id}.`);
+      renderActiveTab();
+      showToast(`Renewed certification for ${WORKER_POOL[idx].id} — now eligible for deployment!`, 'success');
+    }
+
+    function sendExpiryRenewalAlerts() {
+      logAudit('Sec 02 • Expiry Watchdog', 'Dispatched automated 30/15/7-day renewal notices to Business Partner portals.');
+      showToast('Renewal alerts dispatched to 5 Business Partners for expiring safety & DGMS passes!', 'info');
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 03: AI DEMAND FORECASTING & CAPACITY PLANNING
+    // -----------------------------------------------------------------------
+    function renderTabSec3(container) {
+      const baseDemand = 6400;
+      const calcDemand = Math.round(baseDemand * (state.whatIfProd / 100) + (state.whatIfShutdown * 180));
+      const predictedAbsent = Math.round(calcDemand * (state.whatIfAbs / 100));
+      const recommendedBuffer = Math.round(predictedAbsent * 1.12);
+
+      container.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+          <div class="lg:col-span-5 glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+            <div>
+              <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Interactive AI Simulator</span>
+              <h3 class="text-base font-bold text-white mt-1">What-If Turnaround &amp; Demand Planner</h3>
+              <p class="text-xs text-slate-400">Adjust production load, shutdown scopes, and seasonal absenteeism to compute optimal standby buffers.</p>
+            </div>
+
+            <div class="space-y-3 pt-2">
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Plant &amp; Mine Production Target (%)</span>
+                  <span class="font-mono text-cyan-400 font-bold">${state.whatIfProd}%</span>
+                </div>
+                <input type="range" min="80" max="125" value="${state.whatIfProd}" oninput="updateWhatIf('prod', this.value)" class="w-full accent-cyan-400" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Concurrent Smelter / Mill Shutdowns</span>
+                  <span class="font-mono text-emerald-300 font-bold">${state.whatIfShutdown} Unit(s)</span>
+                </div>
+                <input type="range" min="0" max="4" value="${state.whatIfShutdown}" oninput="updateWhatIf('shutdown', this.value)" class="w-full accent-emerald-400" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="text-slate-300">Predicted Seasonal / Festival Absenteeism (%)</span>
+                  <span class="font-mono text-blue-300 font-bold">${state.whatIfAbs}%</span>
+                </div>
+                <input type="range" min="1.5" max="10.0" step="0.5" value="${state.whatIfAbs}" oninput="updateWhatIf('abs', this.value)" class="w-full accent-blue-400" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
+              <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                <div class="text-[11px] text-slate-400">Forecast Shift Demand</div>
+                <div class="text-xl font-extrabold text-white font-mono">${calcDemand.toLocaleString()}</div>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+                <div class="text-[11px] text-slate-400">Predicted No-Shows</div>
+                <div class="text-xl font-extrabold text-rose-400 font-mono">${predictedAbsent}</div>
+              </div>
+              <div class="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 col-span-2 flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-bold text-cyan-300">DRONA Recommended Standby Buffer</div>
+                  <div class="text-[11px] text-slate-400">Prevents unplanned overtime while guaranteeing 100% post fill</div>
+                </div>
+                <div class="text-2xl font-extrabold text-cyan-400 font-mono">${recommendedBuffer}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="text-sm sm:text-base font-bold text-white">14-Day AI Manpower Demand vs. Predicted Attendance Curve</h3>
+                <p class="text-xs text-slate-400">Includes weekend/festival dip modeling and standby reliever buffer</p>
+              </div>
+              <span class="text-xs font-mono text-cyan-300">R² = 0.94</span>
+            </div>
+            <div class="relative h-64 sm:h-72">
+              <canvas id="chart-sec3-forecast"></canvas>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const ctx = document.getElementById('chart-sec3-forecast');
+      if (ctx && window.Chart) {
+        const days = ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12', 'D13', 'D14'];
+        const demandSeries = days.map((_, i) => calcDemand + Math.round(Math.sin(i) * 60));
+        const rawAttendSeries = demandSeries.map(d => d - predictedAbsent - Math.round(Math.cos(d) * 25));
+        const bufferedSeries = rawAttendSeries.map(a => a + recommendedBuffer);
+
+        activeChartInstances.push(new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: days,
+            datasets: [
+              { label: 'Required Shift Demand', data: demandSeries, borderColor: '#60a5fa', borderDash: [5, 5], tension: 0.3 },
+              { label: 'Unbuffered Attendance', data: rawAttendSeries, borderColor: '#f43f5e', tension: 0.3 },
+              { label: 'With DRONA Standby Buffer', data: bufferedSeries, borderColor: '#22d3ee', backgroundColor: 'rgba(34,211,238,0.12)', fill: true, tension: 0.3 }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 11 } } } },
+            scales: {
+              x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(30,41,59,0.5)' } },
+              y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(30,41,59,0.5)' } }
+            }
+          }
+        }));
+      }
+    }
+
+    function updateWhatIf(field, val) {
+      if (field === 'prod') state.whatIfProd = Number(val);
+      if (field === 'shutdown') state.whatIfShutdown = Number(val);
+      if (field === 'abs') state.whatIfAbs = Number(val);
+      renderActiveTab();
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 04: AI SMART ROSTERING & RULE VALIDATION ENGINE
+    // -----------------------------------------------------------------------
+    function renderTabSec4(container) {
+      container.innerHTML = `
+        <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-bold text-white">DRONA Multi-Constraint Smart Roster &amp; Pre-Upload Validator</h3>
+              <p class="text-xs text-slate-400">Replaces unilateral manual uploads into Saviour WMS by validating rest intervals, weekly 48-hr caps, and 100% skill match before commit.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <button type="button" onclick="generateSmartRoster()" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition">
+                🤖 Auto-Generate Conflict-Free Roster
+              </button>
+              <button type="button" onclick="pushRosterToSaviour()" class="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition">
+                ⇄ Push Validated Roster to Saviour WMS
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+              <div class="text-[11px] text-slate-400">Double-Shift Conflicts</div>
+              <div class="text-base sm:text-lg font-bold text-emerald-400 font-mono">0 Detected</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+              <div class="text-[11px] text-slate-400">12-Hr Mandatory Rest</div>
+              <div class="text-base sm:text-lg font-bold text-emerald-400 font-mono">100% OK</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+              <div class="text-[11px] text-slate-400">Weekly 48-Hr Cap</div>
+              <div class="text-base sm:text-lg font-bold text-cyan-300 font-mono">Verified</div>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800">
+              <div class="text-[11px] text-slate-400">Saviour API Sync</div>
+              <div class="text-base sm:text-lg font-bold text-cyan-400 font-mono">Ready</div>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-left border-collapse text-xs min-w-[620px]">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2.5 px-3">Shift Slot</th>
+                  <th class="py-2.5 px-3">Assigned Resource ID</th>
+                  <th class="py-2.5 px-3">HZL Unit &amp; Post</th>
+                  <th class="py-2.5 px-3">Skill &amp; Cert Check</th>
+                  <th class="py-2.5 px-3">Weekly Hours</th>
+                  <th class="py-2.5 px-3">Rest Interval</th>
+                  <th class="py-2.5 px-3">AI Rule Verdict</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                ${WORKER_POOL.filter(w => !w.certStatus.includes('Expired')).slice(0, 8).map(w => `
+                  <tr class="hover:bg-slate-900/50">
+                    <td class="py-3 px-3 font-mono text-cyan-300">${state.globalShift}</td>
+                    <td class="py-3 px-3 font-semibold text-white">${w.id} <span class="text-slate-400">(${w.name})</span></td>
+                    <td class="py-3 px-3 text-slate-300">${w.site} • ${w.role}</td>
+                    <td class="py-3 px-3 text-emerald-400 font-mono">✔ ${w.tier} (${w.cert})</td>
+                    <td class="py-3 px-3 font-mono text-slate-200">${w.hoursUsed} / 48 hrs</td>
+                    <td class="py-3 px-3 font-mono text-emerald-400">16.0 hrs rest</td>
+                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono text-[11px]">VALIDATED FOR SAVIOUR</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function generateSmartRoster() {
+      logAudit('Sec 04 • AI Smart Roster', `Generated multi-constraint conflict-free roster for ${state.globalShift} across HZL sites.`);
+      showToast('DRONA Smart Roster regenerated: 100% skill-matched, zero rest/fatigue violations!', 'success');
+    }
+
+    function pushRosterToSaviour() {
+      logAudit('Sec 04 • Saviour API Sync', 'Pushed validated shift roster to Saviour WMS via bi-directional API.');
+      showToast('Validated roster committed to Saviour WMS via API — zero manual upload required!', 'success');
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 05: REAL-TIME BIOMETRIC & GATE ATTENDANCE TRACKING
+    // -----------------------------------------------------------------------
+    function renderTabSec5(container) {
+      container.innerHTML = `
+        <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-bold text-white">Real-Time Mine-Gate &amp; Plant Turnstile Biometric Stream</h3>
+              <p class="text-xs text-slate-400">Consumes live entry/exit punches from existing hardware without physical upgrades to reconcile roster check-ins.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <button type="button" onclick="simulateGatePunchBurst()" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition">
+                ⚡ Simulate Live Gate Punch Event
+              </button>
+              <button type="button" onclick="switchTab('sec6')" class="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 font-bold text-xs transition">
+                Resolve Shortfalls in Sec 06 →
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-left border-collapse text-xs min-w-[560px]">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2.5 px-3">Punch Timestamp</th>
+                  <th class="py-2.5 px-3">Biometric Gate / Turnstile</th>
+                  <th class="py-2.5 px-3">Resource ID</th>
+                  <th class="py-2.5 px-3">Scheduled Role</th>
+                  <th class="py-2.5 px-3">Reconciliation Verdict</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                ${state.gateFeed.map(g => `
+                  <tr class="hover:bg-slate-900/50">
+                    <td class="py-3 px-3 font-mono text-cyan-300">${g.time}</td>
+                    <td class="py-3 px-3 text-white font-medium">${g.gate}</td>
+                    <td class="py-3 px-3 text-slate-200">${g.worker}</td>
+                    <td class="py-3 px-3 text-slate-400">${g.role}</td>
+                    <td class="py-3 px-3 font-mono font-bold ${
+                      g.status.includes('BLOCKED') || g.status.includes('NO-SHOW')
+                        ? 'text-rose-400'
+                        : g.status.includes('STANDBY')
+                        ? 'text-cyan-300'
+                        : 'text-emerald-400'
+                    }">${g.status}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function simulateGatePunchBurst() {
+      const now = new Date().toTimeString().split(' ')[0];
+      const randomWorker = WORKER_POOL[Math.floor(Math.random() * WORKER_POOL.length)];
+      state.gateFeed.unshift({
+        time: now,
+        gate: randomWorker.site + ' Gate #1',
+        worker: `${randomWorker.name} (${randomWorker.id})`,
+        role: `${randomWorker.role} ${randomWorker.tier}`,
+        status: randomWorker.certStatus.includes('Expired') ? 'BLOCKED: CERT EXPIRED' : 'ON-TIME MATCH'
+      });
+      renderActiveTab();
+      showToast(`Live Biometric Event Processed: ${randomWorker.id} at ${randomWorker.site}`, 'info');
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 06: AI AUTOMATED RELIEVER IDENTIFICATION & DYNAMIC DEPLOYMENT
+    // -----------------------------------------------------------------------
+    function renderTabSec6(container) {
+      container.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div class="glass-panel p-4 rounded-2xl">
+            <div class="text-xs text-slate-400">Open Shift Shortfalls</div>
+            <div class="text-2xl font-extrabold text-cyan-400 font-mono mt-1">${SHORTFALL_QUEUE.filter(s => s.status === 'Open Shortfall').length}</div>
+            <div class="text-[11px] text-slate-400 mt-1">Auto-detected from gate grace-window delta</div>
+          </div>
+          <div class="glass-panel p-4 rounded-2xl">
+            <div class="text-xs text-slate-400">Relievers Deployed (MTD)</div>
+            <div class="text-2xl font-extrabold text-emerald-400 font-mono mt-1">${state.relieversPlacedCount}</div>
+            <div class="text-[11px] text-slate-400 mt-1">100% skill-matched &amp; zero overtime</div>
+          </div>
+          <div class="glass-panel p-4 rounded-2xl">
+            <div class="text-xs text-slate-400">Mean Time to Fill Absent Post</div>
+            <div class="text-2xl font-extrabold text-cyan-300 font-mono mt-1">18 Seconds</div>
+            <div class="text-[11px] text-slate-400 mt-1">Down from 42 mins of manual coordination</div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          ${SHORTFALL_QUEUE.map((sf, sIdx) => `
+            <div class="glass-panel p-4 sm:p-5 rounded-2xl border ${sf.status === 'Open Shortfall' ? 'border-cyan-500/40' : 'border-emerald-500/40'} space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                <div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="font-mono text-xs font-bold text-cyan-300">${sf.id}</span>
+                    <span class="font-bold text-white text-sm">${sf.site} — ${sf.zone}</span>
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-mono ${sf.status === 'Open Shortfall' ? 'bg-cyan-500/20 text-cyan-300' : 'bg-emerald-500/20 text-emerald-300'}">${sf.status}</span>
+                  </div>
+                  <div class="text-xs text-slate-400 mt-1">Required Post: <strong class="text-white">${sf.roleRequired}</strong> • Mandatory Cert: <strong class="text-cyan-300">${sf.certRequired}</strong> • Trigger: <span class="text-rose-300">${sf.absentWorker}</span></div>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto -mx-2 px-2">
+                <table class="w-full text-left border-collapse text-xs min-w-[620px]">
+                  <thead>
+                    <tr class="text-slate-400 border-b border-slate-800 uppercase">
+                      <th class="py-2 px-2">AI Match Score</th>
+                      <th class="py-2 px-2">Candidate Reliever</th>
+                      <th class="py-2 px-2">Skill &amp; Cert Verification</th>
+                      <th class="py-2 px-2">Overtime Cost Impact</th>
+                      <th class="py-2 px-2">Gate Proximity</th>
+                      <th class="py-2 px-2">Fatigue / Rest</th>
+                      <th class="py-2 px-2">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-800/60">
+                    ${sf.candidates.map(c => `
+                      <tr class="hover:bg-slate-900/50">
+                        <td class="py-2.5 px-2 font-mono font-extrabold text-cyan-400">${c.score}% Match</td>
+                        <td class="py-2.5 px-2 text-white font-semibold">${c.name} <span class="text-slate-400 font-mono">(${c.id})</span></td>
+                        <td class="py-2.5 px-2 text-emerald-300 font-mono">${c.skillMatch}</td>
+                        <td class="py-2.5 px-2 font-mono ${c.otImpact.includes('₹0') ? 'text-cyan-300' : 'text-rose-300'}">${c.otImpact}</td>
+                        <td class="py-2.5 px-2 text-slate-300">${c.proximity}</td>
+                        <td class="py-2.5 px-2 text-emerald-400 font-mono">${c.fatigue}</td>
+                        <td class="py-2.5 px-2">
+                          ${sf.status === 'Open Shortfall'
+                            ? `<button type="button" onclick="approveReliever(${sIdx}, '${c.name}', '${c.id}')" class="px-3 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold transition">Approve & Deploy</button>`
+                            : `<span class="text-emerald-400 font-mono text-[11px]">✔ Post Filled</span>`
+                          }
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function approveReliever(sIdx, candidateName, candidateId) {
+      SHORTFALL_QUEUE[sIdx].status = `Filled by ${candidateName} (${candidateId}) — Synced to Saviour`;
+      state.relieversPlacedCount += 1;
+      logAudit('Sec 06 • AI Reliever Engine', `Deployed reliever ${candidateName} (${candidateId}) to ${SHORTFALL_QUEUE[sIdx].zone}.`);
+      renderActiveTab();
+      showToast(`Reliever ${candidateId} deployed & synced to Saviour WMS in 1 click!`, 'success');
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 07: AI OVERTIME OPTIMIZATION & COST-LEAKAGE CONTROL
+    // -----------------------------------------------------------------------
+    function renderTabSec7(container) {
+      container.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-emerald-400">
+            <div class="text-xs text-slate-400">Cumulative Overtime Cost Saved</div>
+            <div class="text-2xl font-extrabold text-emerald-400 font-mono mt-1">₹${state.otMoneySaved.toLocaleString()}</div>
+            <div class="text-[11px] text-slate-400 mt-1">Calculated via read-only Aparajitha wage bands</div>
+          </div>
+          <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-cyan-400">
+            <div class="text-xs text-slate-400">Workforce Productivity Improvement</div>
+            <div class="text-2xl font-extrabold text-white font-mono mt-1">+14.2%</div>
+            <div class="text-[11px] text-slate-400 mt-1">Within Target KPI window (10–15%)</div>
+          </div>
+          <div class="glass-panel p-4 rounded-2xl border-l-4 border-l-blue-400">
+            <div class="text-xs text-slate-400">Avoidable OT Requests Intercepted</div>
+            <div class="text-2xl font-extrabold text-cyan-300 font-mono mt-1">${OT_INTERCEPT_QUEUE.filter(o => !o.saved).length} Pending</div>
+            <div class="text-[11px] text-slate-400 mt-1">Standard-hour substitutes available in pool</div>
+          </div>
+        </div>
+
+        <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white">DRONA Overtime Interception &amp; Standard-Hour Substitution Queue</h3>
+              <p class="text-xs text-slate-400">Reads historical wage and overtime multiplier rates from Aparajitha (without running payroll) to recommend zero-OT replacements.</p>
+            </div>
+            <button type="button" onclick="acceptAllOtSubstitutes()" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition">
+              💰 Accept All AI Standard-Hour Substitutes
+            </button>
+          </div>
+
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-left border-collapse text-xs min-w-[600px]">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2.5 px-3">ID &amp; Site</th>
+                  <th class="py-2.5 px-3">Department</th>
+                  <th class="py-2.5 px-3">Exhausted Resource (OT Trigger)</th>
+                  <th class="py-2.5 px-3">Avoidable OT Cost</th>
+                  <th class="py-2.5 px-3">AI Recommended Standard-Hour Substitute</th>
+                  <th class="py-2.5 px-3">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                ${OT_INTERCEPT_QUEUE.map((o, idx) => `
+                  <tr class="hover:bg-slate-900/50">
+                    <td class="py-3 px-3"><span class="font-mono text-cyan-300 font-bold">${o.id}</span><div class="text-white">${o.site}</div></td>
+                    <td class="py-3 px-3 text-slate-300">${o.dept}</td>
+                    <td class="py-3 px-3 text-rose-300 font-mono">${o.requestedWorker}</td>
+                    <td class="py-3 px-3 font-mono font-bold text-cyan-300">₹${o.otCost.toLocaleString()}</td>
+                    <td class="py-3 px-3 text-emerald-300 font-semibold">${o.aiAlternative} <span class="text-slate-400 font-mono">(${o.skill})</span></td>
+                    <td class="py-3 px-3">
+                      ${o.saved
+                        ? '<span class="text-emerald-400 font-mono text-[11px]">✔ Substituted (OT Saved)</span>'
+                        : `<button type="button" onclick="acceptSingleOtSubstitute(${idx})" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 font-bold transition">Deploy Standard-Hour Worker</button>`
+                      }
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function acceptSingleOtSubstitute(idx) {
+      if (!OT_INTERCEPT_QUEUE[idx].saved) {
+        OT_INTERCEPT_QUEUE[idx].saved = true;
+        state.otMoneySaved += OT_INTERCEPT_QUEUE[idx].otCost;
+        logAudit('Sec 07 • Overtime Control', `Intercepted overtime ${OT_INTERCEPT_QUEUE[idx].id}; deployed standard-hour worker saving ₹${OT_INTERCEPT_QUEUE[idx].otCost}.`);
+        renderActiveTab();
+        showToast(`Saved ₹${OT_INTERCEPT_QUEUE[idx].otCost.toLocaleString()} in unmanaged overtime!`, 'success');
+      }
+    }
+
+    function acceptAllOtSubstitutes() {
+      let savedNow = 0;
+      OT_INTERCEPT_QUEUE.forEach(o => {
+        if (!o.saved) { o.saved = true; savedNow += o.otCost; }
+      });
+      state.otMoneySaved += savedNow;
+      logAudit('Sec 07 • Batch OT Control', `Accepted all AI standard-hour substitutes saving ₹${savedNow}.`);
+      renderActiveTab();
+      showToast(savedNow > 0 ? `All overtime requests replaced with standard-hour workers — saved ₹${savedNow.toLocaleString()}!` : 'All overtime requests already optimized!', 'success');
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 08: SUPERVISOR OPERATIONAL WORKBENCH & MOBILE CONSOLE
+    // -----------------------------------------------------------------------
+    function renderTabSec8(container) {
+      container.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+          <div class="lg:col-span-5 glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+            <h3 class="text-base font-bold text-white">Digital Shift Handover Log Entry</h3>
+            <p class="text-xs text-slate-400">Record shift exceptions, temporary zone swaps, and safety instructions for the incoming Shift Supervisor role.</p>
+            <form onsubmit="submitHandoverLog(event)" class="space-y-3">
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">HZL Site &amp; Unit</label>
+                <select id="ho-site" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white">
+                  <option>Rampura Agucha UG Mine</option>
+                  <option>Sindesar Khurd UG Mine</option>
+                  <option>Chanderiya Lead-Zinc Smelter</option>
+                  <option>Dariba Smelter &amp; Concentrator</option>
+                  <option>Zawar Underground Mines</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">Handover Transition</label>
+                <select id="ho-shift" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white">
+                  <option>Shift A → Shift B</option>
+                  <option>Shift B → Shift C</option>
+                  <option>Shift C → Shift A</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-slate-400 mb-1">Critical Operational &amp; Manpower Handover Note</label>
+                <textarea id="ho-note" rows="3" required placeholder="Enter reliever status, critical maintenance permit holds, or equipment status..." class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white"></textarea>
+              </div>
+              <button type="submit" class="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition">
+                + Record Digital Shift Handover
+              </button>
+            </form>
+          </div>
+
+          <div class="lg:col-span-7 glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+            <h3 class="text-base font-bold text-white">Live Supervisor Shift Handover &amp; Exception Feed</h3>
+            <div class="space-y-3">
+              ${state.handoverLogs.map(h => `
+                <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-bold text-cyan-400">${h.site} • ${h.shift}</span>
+                    <span class="font-mono text-slate-400">${h.time}</span>
+                  </div>
+                  <p class="text-xs text-slate-200 leading-relaxed">${h.note}</p>
+                  <div class="text-[11px] text-slate-400 font-mono">Logged by Role: ${h.author}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function submitHandoverLog(e) {
+      e.preventDefault();
+      const site = document.getElementById('ho-site').value;
+      const shift = document.getElementById('ho-shift').value;
+      const note = document.getElementById('ho-note').value;
+      const role = RBAC_ROLES[state.activeRole];
+      state.handoverLogs.unshift({
+        time: new Date().toTimeString().split(' ')[0],
+        shift,
+        author: role.roleLabel,
+        site,
+        note
+      });
+      logAudit('Sec 08 • Shift Handover', `Logged digital shift handover for ${site} (${shift}).`);
+      renderActiveTab();
+      showToast('Digital shift handover logged & shared with incoming Shift Supervisor!', 'success');
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 09: BUSINESS PARTNER (CONTRACTOR) GOVERNANCE & SLA PORTAL
+    // -----------------------------------------------------------------------
+    function renderTabSec9(container) {
+      container.innerHTML = `
+        <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="text-base font-bold text-white">Business Partner (Contractor) SLA &amp; Fulfilment Scorecard</h3>
+              <p class="text-xs text-slate-400">Tracks daily headcount supply vs. contracted SLA, skill compliance %, and pre-validates contractor roster submissions.</p>
+            </div>
+            <button type="button" onclick="simulateVendorRosterCheck()" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition">
+              📤 Simulate Vendor Roster Pre-Upload Validation
+            </button>
+          </div>
+
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-left border-collapse text-xs min-w-[600px]">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2.5 px-3">Vendor Code &amp; Name</th>
+                  <th class="py-2.5 px-3">HZL Sites Served</th>
+                  <th class="py-2.5 px-3">Contracted Headcount</th>
+                  <th class="py-2.5 px-3">Active Supplied</th>
+                  <th class="py-2.5 px-3">Cert Compliance</th>
+                  <th class="py-2.5 px-3">Absenteeism %</th>
+                  <th class="py-2.5 px-3">Composite SLA Score</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                ${BP_VENDORS.map(v => `
+                  <tr class="hover:bg-slate-900/50">
+                    <td class="py-3 px-3"><span class="font-mono text-cyan-300 font-bold">${v.code}</span><div class="text-white font-semibold">${v.name}</div></td>
+                    <td class="py-3 px-3 text-slate-300">${v.sites}</td>
+                    <td class="py-3 px-3 font-mono text-slate-200">${v.contracted.toLocaleString()}</td>
+                    <td class="py-3 px-3 font-mono text-cyan-400 font-bold">${v.deployed.toLocaleString()}</td>
+                    <td class="py-3 px-3 font-mono text-emerald-300">${v.certRate}%</td>
+                    <td class="py-3 px-3 font-mono text-cyan-200">${v.absenteeism}%</td>
+                    <td class="py-3 px-3"><span class="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono font-bold">${v.slaScore}%</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function simulateVendorRosterCheck() {
+      openModal('📤 Business Partner Roster Pre-Upload Validation Report', `
+        <div class="space-y-3">
+          <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+            <div><strong>Vendor:</strong> Apex Mining Contractors Pvt Ltd (BP-01)</div>
+            <div><strong>Batch Size:</strong> 420 Shift-A Workers (Rampura Agucha UG)</div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30">
+              <div class="text-lg font-bold font-mono text-emerald-400">417</div>
+              <div class="text-[11px] text-slate-300">Approved &amp; Synced to Saviour</div>
+            </div>
+            <div class="p-3 rounded-xl bg-cyan-500/15 border border-cyan-500/30">
+              <div class="text-lg font-bold font-mono text-cyan-300">2</div>
+              <div class="text-[11px] text-slate-300">Auto-Swapped (OT Cap)</div>
+            </div>
+            <div class="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30">
+              <div class="text-lg font-bold font-mono text-rose-400">1</div>
+              <div class="text-[11px] text-slate-300">Rejected (Expired Medical)</div>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 10: REAL-TIME MULTI-LOCATION COMMAND CENTER & DASHBOARDS
+    // -----------------------------------------------------------------------
+    function renderTabSec10(container) {
+      const sites = [
+        { name: 'Rampura Agucha UG Mine', type: 'Underground Mine & Concentrator', planned: 1850, actual: 1842, relievers: 44, ptw: 12, fill: '99.6%' },
+        { name: 'Sindesar Khurd UG Mine', type: 'Silver-Rich Underground Mine & Mill', planned: 1420, actual: 1412, relievers: 31, ptw: 9, fill: '99.4%' },
+        { name: 'Chanderiya Lead-Zinc Smelter', type: 'Hydro/Pyro Smelter & Captive Power', planned: 1380, actual: 1371, relievers: 36, ptw: 8, fill: '99.3%' },
+        { name: 'Dariba Smelter & Concentrator', type: 'Hydro Zinc Smelter & Beneficiation', planned: 960, actual: 954, relievers: 18, ptw: 5, fill: '99.4%' },
+        { name: 'Zawar Underground Mines', type: '4-Mine Underground Complex (Mochia/Balaria)', planned: 890, actual: 885, relievers: 13, ptw: 4, fill: '99.4%' }
+      ];
+
+      container.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          ${sites.map(s => `
+            <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-mono text-cyan-400 font-bold">● LIVE TELEMETRY</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-mono font-bold">${s.fill} Fill</span>
+              </div>
+              <div>
+                <h3 class="text-base font-extrabold text-white">${s.name}</h3>
+                <p class="text-xs text-slate-400">${s.type}</p>
+              </div>
+              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-xs">
+                <div class="p-2.5 rounded-xl bg-slate-900">
+                  <div class="text-slate-400 text-[10px]">Planned vs Actual</div>
+                  <div class="font-mono font-bold text-white mt-0.5">${s.actual} / ${s.planned}</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-900">
+                  <div class="text-slate-400 text-[10px]">AI Relievers Active</div>
+                  <div class="font-mono font-bold text-cyan-300 mt-0.5">${s.relievers} Placed</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-900">
+                  <div class="text-slate-400 text-[10px]">Active JSA Permits</div>
+                  <div class="font-mono font-bold text-blue-300 mt-0.5">${s.ptw} High-Risk PTWs</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-900">
+                  <div class="text-slate-400 text-[10px]">Cert Compliance</div>
+                  <div class="font-mono font-bold text-emerald-400 mt-0.5">100.0% Lock</div>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 11: AI WORKFORCE INTELLIGENCE & PREDICTIVE RISK ANALYTICS
+    // -----------------------------------------------------------------------
+    function renderTabSec11(container) {
+      const gaps = [
+        { role: 'DGMS Certified UG Shotfirer / Blaster (L4)', site: 'Rampura Agucha & Zawar', gap30d: '-6 Workers', reason: '4 upcoming license renewals + 2 retirements', upskillCandidates: '8 L3 Explosives Chargehands eligible for fast-track DGMS exam' },
+        { role: '33kV HT Authorized Switching Technician (L4)', site: 'Chanderiya Smelter', gap30d: '-4 Workers', reason: 'Annual substation turnaround expansion', upskillCandidates: '6 L3 HT Wiremen ready for supervisory assessment' },
+        { role: 'Confined Space FRP & Rubber Lining Specialist (L3)', site: 'Dariba Hydro Leach', gap30d: '-5 Workers', reason: 'Scheduled leach tank overhaul in 3 weeks', upskillCandidates: '9 L2 Mechanical Fitters available for CSE cross-training' },
+        { role: 'Mechanized Jumbo & Bolter Rig Operator (L4)', site: 'Sindesar Khurd UG', gap30d: '-4 Workers', reason: 'New decline development heading opening', upskillCandidates: '7 L3 LHD Operators identified by AI skill-adjacency matrix' }
+      ];
+
+      container.innerHTML = `
+        <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white">30–60 Day Predictive Skill-Gap Radar &amp; AI Cross-Training Advisor</h3>
+              <p class="text-xs text-slate-400">Combines upcoming project maintenance schedules, certification expiry curves, and historical turnover to prevent future bottlenecks.</p>
+            </div>
+            <button type="button" onclick="enrollUpskillBatch()" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs transition">
+              🎓 Enroll AI-Shortlisted Workers in Upskilling Batch
+            </button>
+          </div>
+
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-left border-collapse text-xs min-w-[600px]">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2.5 px-3">High-Risk Trade / Designation</th>
+                  <th class="py-2.5 px-3">Impacted HZL Site</th>
+                  <th class="py-2.5 px-3">Predicted 30-Day Deficit</th>
+                  <th class="py-2.5 px-3">Primary Risk Driver</th>
+                  <th class="py-2.5 px-3">AI Adjacency Cross-Training Recommendation</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                ${gaps.map(g => `
+                  <tr class="hover:bg-slate-900/50">
+                    <td class="py-3 px-3 font-bold text-white">${g.role}</td>
+                    <td class="py-3 px-3 text-slate-300">${g.site}</td>
+                    <td class="py-3 px-3 font-mono font-bold text-rose-400">${g.gap30d}</td>
+                    <td class="py-3 px-3 text-cyan-200">${g.reason}</td>
+                    <td class="py-3 px-3 text-emerald-300 font-medium">${g.upskillCandidates}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function enrollUpskillBatch() {
+      logAudit('Sec 11 • AI Skill Radar', 'Enrolled 30 adjacent-skill L2/L3 workers into HZL Safety & Trade Upskilling Batch.');
+      showToast('30 workers enrolled into HZL Cross-Training & DGMS Certification Batch!', 'success');
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 12: NON-INTRUSIVE INTEGRATION, SECURITY & MIDDLEWARE HUB
+    // -----------------------------------------------------------------------
+    function renderTabSec12(container) {
+      container.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-bold text-white">Enterprise System Connectors (Non-Intrusive)</h3>
+              <button type="button" onclick="testMiddlewareSync()" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-mono font-bold">
+                ↻ Test API Handshake
+              </button>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                <div><div class="font-bold text-white">Saviour Workforce Management System</div><div class="text-slate-400">Bi-directional REST API • Pulls registry, pushes validated rosters</div></div>
+                <span class="font-mono text-emerald-400 font-bold shrink-0">CONNECTED</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                <div><div class="font-bold text-white">Aparajitha Wage &amp; Payroll System</div><div class="text-slate-400">Read-Only Cost Bridge • Wage &amp; OT parameters only</div></div>
+                <span class="font-mono text-cyan-300 font-bold shrink-0">READ-ONLY</span>
+              </div>
+              <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                <div><div class="font-bold text-white">Biometric &amp; Mine-Gate Turnstile Streams</div><div class="text-slate-400">Software webhook listener • Zero hardware change required</div></div>
+                <span class="font-mono text-emerald-300 font-bold shrink-0">5 SITES LIVE</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-3">
+            <h3 class="text-base font-bold text-white">Strict Out-of-Scope Architectural Guardrails</h3>
+            <p class="text-xs text-slate-400">Hard-coded boundaries ensuring existing enterprise operations continue without disruption:</p>
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between gap-2">
+                <span class="text-slate-300">Payroll Processing &amp; Wage Computation</span>
+                <span class="font-mono text-rose-400 shrink-0">OUT OF SCOPE</span>
+              </div>
+              <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between gap-2">
+                <span class="text-slate-300">Biometric / Turnstile Hardware Replacement</span>
+                <span class="font-mono text-rose-400 shrink-0">OUT OF SCOPE</span>
+              </div>
+              <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex justify-between gap-2">
+                <span class="text-slate-300">Recruitment, Hiring &amp; Industrial Relations (IR)</span>
+                <span class="font-mono text-rose-400 shrink-0">OUT OF SCOPE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-3">
+          <h3 class="text-base font-bold text-white">Immutable RBAC Role &amp; Operational Audit Log</h3>
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-left border-collapse text-xs min-w-[540px]">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2 px-3">Timestamp</th>
+                  <th class="py-2 px-3">RBAC Role</th>
+                  <th class="py-2 px-3">Module</th>
+                  <th class="py-2 px-3">Action / Verification Detail</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                ${state.auditLogs.map(log => `
+                  <tr class="hover:bg-slate-900/50">
+                    <td class="py-2.5 px-3 font-mono text-cyan-300">${log.ts}</td>
+                    <td class="py-2.5 px-3 font-semibold text-white">${log.actor}</td>
+                    <td class="py-2.5 px-3 font-mono text-emerald-400">${log.module}</td>
+                    <td class="py-2.5 px-3 text-slate-300">${log.detail}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function testMiddlewareSync() {
+      logAudit('Sec 12 • API Health Check', 'Verified zero-latency handshake across Saviour WMS, Aparajitha Read-Bridge, and 5 Site Gate Listeners.');
+      renderActiveTab();
+      showToast('All 3 Enterprise Middleware Connectors verified healthy (14ms latency)!', 'success');
+    }
+
+    // -----------------------------------------------------------------------
+    // SECTION 13: AI WORK-ORDER & JSA-DRIVEN MANPOWER ALLOCATION ENGINE (20 HZL ACTIVITIES)
+    // -----------------------------------------------------------------------
+    function renderTabSec13(container) {
+      const selectedAct = HZL_20_ACTIVITIES.find(a => a.id === Number(state.selectedJsaActivityId)) || HZL_20_ACTIVITIES[0];
+      const filteredActivities = state.selectedJsaDomain === 'ALL'
+        ? HZL_20_ACTIVITIES
+        : HZL_20_ACTIVITIES.filter(a => a.domain === state.selectedJsaDomain);
+
+      let allocatedWorkersHtml = '';
+      let workerCursor = 0;
+      const validPool = WORKER_POOL.filter(w => !w.certStatus.includes('Expired'));
+
+      selectedAct.roles.forEach(reqRole => {
+        for (let i = 0; i < reqRole.count; i++) {
+          const picked = validPool[workerCursor % validPool.length];
+          workerCursor++;
+          allocatedWorkersHtml += `
+            <tr class="hover:bg-slate-900/50">
+              <td class="py-2.5 px-3 font-bold text-white">${reqRole.title}</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono font-bold">${reqRole.tier}</span></td>
+              <td class="py-2.5 px-3 text-emerald-300 font-mono">✔ ${reqRole.cert}</td>
+              <td class="py-2.5 px-3 font-semibold text-cyan-300">${picked.id} <span class="text-slate-400 font-mono">(${picked.name})</span></td>
+              <td class="py-2.5 px-3 text-slate-300">${picked.bp}</td>
+              <td class="py-2.5 px-3 font-mono text-emerald-400">${picked.gateIn}</td>
+              <td class="py-2.5 px-3 font-mono text-cyan-300">${picked.hoursUsed}/48h (₹0 OT)</td>
+            </tr>
+          `;
+        }
+      });
+
+      container.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+          <!-- Left 5 Cols: Work Input & Custom JSA Analyzer -->
+          <div class="lg:col-span-5 glass-panel p-4 sm:p-5 rounded-2xl border border-cyan-500/40 space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">🤖 DRONA JSA Engine</span>
+              <span class="text-xs font-mono text-emerald-400">PTWs Today: ${state.issuedPtwCount}</span>
+            </div>
+
+            <div>
+              <h3 class="text-base font-bold text-white">1. Select or Enter Daily HZL Work Activity</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Choose from 20 standard HZL daily activities (UG Mining, Smelters, Concentrator, Maintenance) or type any custom work order.</p>
+            </div>
+
+            <!-- Domain Filter Pills -->
+            <div class="flex flex-wrap gap-1.5">
+              ${['ALL', 'UG Mining', 'Smelter (Hydro)', 'Smelter (Pyro)', 'Smelter (Acid)', 'Concentrator', 'Maintenance'].map(dom => `
+                <button type="button" onclick="filterJsaDomain('${dom}')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
+                  state.selectedJsaDomain === dom
+                    ? 'bg-cyan-400 text-slate-950 font-bold'
+                    : 'bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700'
+                }">${dom === 'ALL' ? 'All 20 Jobs' : dom}</button>
+              `).join('')}
+            </div>
+
+            <!-- Dropdown of 20 HZL Activities -->
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Standard HZL Daily Activity Template (${filteredActivities.length} shown)</label>
+              <select id="jsa-activity-select" onchange="selectJsaActivity(this.value)" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white font-semibold focus:outline-none focus:border-cyan-400">
+                ${filteredActivities.map(a => `
+                  <option value="${a.id}" ${a.id === selectedAct.id ? 'selected' : ''}>#${a.id} [${a.domain}] ${a.activity} (${a.totalCrew} Crew)</option>
+                `).join('')}
+              </select>
+            </div>
+
+            <!-- Custom Work-Order NLP Input -->
+            <div class="pt-2 border-t border-slate-800 space-y-2">
+              <label class="block text-xs text-slate-300 font-semibold">Or Type a Custom Work Order for AI JSA Analysis:</label>
+              <div class="flex gap-2">
+                <input id="custom-jsa-input" type="text" value="${state.customJsaWorkText}" placeholder="e.g., Underground stope blasting or Roaster SO2 duct repair..." class="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-cyan-400" />
+                <button type="button" onclick="analyzeCustomWorkOrder()" class="px-3.5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shrink-0 transition">
+                  Analyze JSA
+                </button>
+              </div>
+            </div>
+
+            <!-- Extracted JSA Summary Card -->
+            <div class="p-3.5 sm:p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2.5 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-cyan-300 font-bold">JSA PROFILE #${selectedAct.id} • ${selectedAct.domain.toUpperCase()}</span>
+                <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono font-bold">Crew: ${selectedAct.totalCrew}</span>
+              </div>
+              <div class="text-sm font-bold text-white">${selectedAct.activity}</div>
+              <div class="text-slate-400"><strong class="text-slate-200">HZL Site:</strong> ${selectedAct.site}</div>
+              <div class="text-cyan-200"><strong class="text-white">AI Identified JSA Hazards:</strong> ${selectedAct.hazards}</div>
+              <div>
+                <div class="text-slate-300 font-semibold mb-1">Mandatory Permits (PTW) &amp; Clearances:</div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${selectedAct.permits.map(p => `<span class="px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-300 border border-rose-500/30 font-mono text-[10px]">🛡️ ${p}</span>`).join('')}
+                </div>
+              </div>
+              <div class="text-emerald-300"><strong class="text-white">Required PPE &amp; LOTO:</strong> ${selectedAct.ppe}</div>
+            </div>
+          </div>
+
+          <!-- Right 7 Cols: AI Designation Breakdown & Named Manpower Allocation -->
+          <div class="lg:col-span-7 glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
+            <div class="space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                <div>
+                  <h3 class="text-base font-bold text-white">2. AI-Recommended Designations &amp; Live Manpower Allocation</h3>
+                  <p class="text-xs text-slate-400">Matched against live gate biometric check-ins, 100% valid safety/DGMS certificates, and zero overtime cost.</p>
+                </div>
+                <button type="button" onclick="approveAndIssueJsaCrew(${selectedAct.id})" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 via-blue-500 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-extrabold text-xs shadow-lg shadow-cyan-500/20 transition">
+                  ✔ Approve Crew, Issue PTW &amp; Sync to Saviour
+                </button>
+              </div>
+
+              <!-- Designation Summary Pills -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ${selectedAct.roles.map(r => `
+                  <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                    <div>
+                      <div class="text-xs font-bold text-white">${r.title}</div>
+                      <div class="text-[11px] text-emerald-400 font-mono">${r.cert}</div>
+                    </div>
+                    <div class="text-right shrink-0">
+                      <span class="px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono text-xs font-bold">${r.count}x ${r.tier}</span>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+
+              <!-- Worker Allocation Table -->
+              <div class="overflow-x-auto -mx-2 px-2">
+                <table class="w-full text-left border-collapse text-xs min-w-[600px]">
+                  <thead>
+                    <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                      <th class="py-2 px-3">Required Designation</th>
+                      <th class="py-2 px-3">Tier</th>
+                      <th class="py-2 px-3">JSA Permit Verified</th>
+                      <th class="py-2 px-3">AI Allocated Resource</th>
+                      <th class="py-2 px-3">Business Partner</th>
+                      <th class="py-2 px-3">Gate Punch</th>
+                      <th class="py-2 px-3">OT Impact</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-800/60">
+                    ${allocatedWorkersHtml}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span class="text-emerald-300 font-semibold">✔ All ${selectedAct.totalCrew} allocated personnel hold 100% active permits for "${selectedAct.activity}" with ₹0 overtime leakage.</span>
+              <span class="font-mono text-white">Saviour API Ready</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Complete 20 HZL Daily Activities Master Matrix -->
+        <div class="glass-panel p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white">Master Reference: All 20 HZL Daily Activities (UG Mining, Smelters, Concentrator &amp; Maintenance)</h3>
+              <p class="text-xs text-slate-400">Tap "Load in AI" on any row to inspect its JSA hazards, permits, and live worker allocation above.</p>
+            </div>
+            <span class="text-xs font-mono text-cyan-300">20 Standard HZL Templates</span>
+          </div>
+
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-left border-collapse text-xs min-w-[720px]">
+              <thead>
+                <tr class="border-b border-slate-800 text-slate-400 uppercase">
+                  <th class="py-2.5 px-2.5">#</th>
+                  <th class="py-2.5 px-2.5">Domain &amp; HZL Site</th>
+                  <th class="py-2.5 px-2.5">Daily Work Activity</th>
+                  <th class="py-2.5 px-2.5">AI-Analyzed JSA Hazards &amp; Mandatory Permits</th>
+                  <th class="py-2.5 px-2.5">Designations &amp; Skill Breakdown</th>
+                  <th class="py-2.5 px-2.5">Crew</th>
+                  <th class="py-2.5 px-2.5">Action</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                ${HZL_20_ACTIVITIES.map(a => `
+                  <tr class="hover:bg-slate-900/60 ${a.id === selectedAct.id ? 'bg-cyan-500/10' : ''}">
+                    <td class="py-3 px-2.5 font-mono font-bold text-cyan-300">${a.id}</td>
+                    <td class="py-3 px-2.5"><span class="font-bold text-white">${a.domain}</span><div class="text-[11px] text-slate-400">${a.site}</div></td>
+                    <td class="py-3 px-2.5 font-semibold text-white">${a.activity}</td>
+                    <td class="py-3 px-2.5 text-slate-300">
+                      <div class="text-cyan-200 mb-1">${a.hazards}</div>
+                      <div class="flex flex-wrap gap-1">${a.permits.map(p => `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-emerald-300 font-mono text-[10px]">${p}</span>`).join('')}</div>
+                    </td>
+                    <td class="py-3 px-2.5 text-slate-200">
+                      ${a.roles.map(r => `<div>• ${r.count}x ${r.title} <span class="text-cyan-300 font-mono">(${r.tier})</span></div>`).join('')}
+                    </td>
+                    <td class="py-3 px-2.5 font-mono font-extrabold text-cyan-400 text-sm">${a.totalCrew}</td>
+                    <td class="py-3 px-2.5">
+                      <button type="button" onclick="selectJsaActivity(${a.id})" class="px-3 py-1.5 rounded-lg ${a.id === selectedAct.id ? 'bg-cyan-400 text-slate-950 font-bold' : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 font-semibold'} transition">
+                        ${a.id === selectedAct.id ? 'Active' : 'Load in AI'}
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function filterJsaDomain(domain) {
+      state.selectedJsaDomain = domain;
+      const list = domain === 'ALL' ? HZL_20_ACTIVITIES : HZL_20_ACTIVITIES.filter(a => a.domain === domain);
+      if (list.length > 0) state.selectedJsaActivityId = list[0].id;
+      renderActiveTab();
+    }
+
+    function selectJsaActivity(actId) {
+      state.selectedJsaActivityId = Number(actId);
+      renderActiveTab();
+      const act = HZL_20_ACTIVITIES.find(a => a.id === Number(actId));
+      if (act) showToast(`Loaded JSA #${act.id}: ${act.activity} (${act.totalCrew} crew allocated)`, 'info');
+    }
+
+    function analyzeCustomWorkOrder() {
+      const inputEl = document.getElementById('custom-jsa-input');
+      const query = (inputEl ? inputEl.value : '').trim();
+      state.customJsaWorkText = query;
+      if (!query) {
+        showToast('Please enter a work description to run DRONA JSA matching!', 'warn');
+        return;
+      }
+      const qLower = query.toLowerCase();
+      let bestMatch = HZL_20_ACTIVITIES[0];
+      let bestScore = -1;
+      HZL_20_ACTIVITIES.forEach(a => {
+        const hay = `${a.domain} ${a.activity} ${a.hazards} ${a.permits.join(' ')}`.toLowerCase();
+        let score = 0;
+        qLower.split(/\s+/).forEach(word => {
+          if (word.length > 2 && hay.includes(word)) score += 3;
+        });
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = a;
+        }
+      });
+      state.selectedJsaDomain = 'ALL';
+      state.selectedJsaActivityId = bestMatch.id;
+      logAudit('Sec 13 • Custom JSA NLP', `Parsed work order "${query}" -> Matched JSA #${bestMatch.id} (${bestMatch.activity}).`);
+      renderActiveTab();
+      showToast(`DRONA JSA Engine matched "${query}" to Template #${bestMatch.id}: ${bestMatch.activity}`, 'success');
+    }
+
+    function approveAndIssueJsaCrew(actId) {
+      const act = HZL_20_ACTIVITIES.find(a => a.id === Number(actId)) || HZL_20_ACTIVITIES[0];
+      state.issuedPtwCount += 1;
+      const ptwCode = `PTW-DRONA-2026-${1000 + state.issuedPtwCount}`;
+      logAudit('Sec 13 • JSA Crew Allocation', `Issued ${ptwCode} & allocated ${act.totalCrew} certified personnel for "${act.activity}" at ${act.site}.`);
+      renderActiveTab();
+      openModal(`✔ DRONA JSA Manpower Allocation & Permit Issued (${ptwCode})`, `
+        <div class="space-y-3">
+          <div class="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-200">
+            <div class="font-bold text-sm text-emerald-300">Permit-to-Work ${ptwCode} Active &amp; Synced to Saviour WMS</div>
+            <div class="text-xs mt-1">Activity: <strong>${act.activity}</strong> (${act.site})</div>
+          </div>
+          <div class="text-xs space-y-1.5 bg-slate-900 p-3.5 rounded-xl border border-slate-800">
+            <div><strong class="text-white">JSA Hazards Mitigated:</strong> ${act.hazards}</div>
+            <div><strong class="text-white">Permits Verified:</strong> ${act.permits.join(' • ')}</div>
+            <div><strong class="text-white">Allocated Crew Size:</strong> ${act.totalCrew} Personnel (100% Certified, 0 Overtime Impact)</div>
+            <div><strong class="text-white">Approved By Role:</strong> ${RBAC_ROLES[state.activeRole].roleLabel}</div>
+          </div>
+        </div>
+      `);
+    }
+
+    // -----------------------------------------------------------------------
+    // INITIALIZE ON WINDOW LOAD
+    // -----------------------------------------------------------------------
+    window.onload = function() {
+      renderRbacLoginScreen();
+      renderSidebarNav();
+    };
+  </script>
+</body>
+</html>
